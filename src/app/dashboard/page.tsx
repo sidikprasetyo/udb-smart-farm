@@ -79,12 +79,12 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const sensorsMap: Record<string, keyof DashboardData> = {
-      soil_moisture: 'soilMoisture',
-      soil_ph: 'soilPH',
-      wind_speed: 'windSpeed',
-      rainfall: 'rainfall',
-      radiation: 'radiation',
-      temperature: 'soilTemperature',
+      kelembaban_tanah: 'soilMoisture',
+      ph_tanah: 'soilPH',
+      kecepatan_angin: 'windSpeed',
+      curah_hujan: 'rainfall',
+      radiasi: 'radiation',
+      suhu: 'soilTemperature',
       dht_temperature: 'dhtTemperature',
       dht_humidity: 'dhtHumidity',
     };
