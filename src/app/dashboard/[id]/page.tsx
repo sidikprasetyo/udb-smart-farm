@@ -1,0 +1,54 @@
+'use client';
+
+import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import SensorGraph from '@/components/Sensor/SensorGraph';
+import SensorHistory from '@/components/Sensor/SensorHistory';
+import SensorPagination from '@/components/Sensor/SensorPagination';
+
+const SensorDetailPage = () => {
+  const { id: sensorId } = useParams();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage] = useState(8); // Bisa diubah sesuai keinginan
+  const [historyData, setHistoryData] = useState<any[]>([]);
+
+  // Dummy semua data
+  const allData = Array.from({ length: 75 }, (_, i) => ({
+    id: i + 1,
+    name: 'Soil Moisture',
+    value: '72%',
+    status: 'Optimal',
+    icon: '💧',
+    timestamp: '10-12-2025 | 01:45',
+  }));
+
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * recordsPerPage;
+    const endIndex = startIndex + recordsPerPage;
+    setHistoryData(allData.slice(startIndex, endIndex));
+  }, [currentPage]);
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar currentPage="dashboard" />
+
+      <div className="flex-1">
+        <Header title="Dashboard" userName="Admin" />
+
+        <div className="p-6">
+          <SensorGraph title={sensorId as string} />
+          <SensorHistory data={historyData} />
+          <SensorPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(allData.length / recordsPerPage)}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SensorDetailPage;
