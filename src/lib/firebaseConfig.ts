@@ -3,14 +3,13 @@ import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyAPx1UbDSlLAuXeWqrxCHt9ANjbWgOzr48",
-  authDomain: "databasesensorptpv.firebaseapp.com",
-  databaseURL:
-    "https://databasesensorptpv-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "databasesensorptpv",
-  storageBucket: "databasesensorptpv.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcde123456",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL!,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
 const app = initializeApp(firebaseConfig);
