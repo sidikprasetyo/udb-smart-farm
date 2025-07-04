@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Sprout, CircleGauge } from 'lucide-react';
+import { Sprout } from 'lucide-react';
+import { RiDashboard3Fill } from "react-icons/ri";
 import Link from 'next/link';
 
 interface SidebarProps {
@@ -43,13 +44,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
       <div className="mt-3 flex flex-col space-y-2">
         <button
           className={`flex items-center ${
-            expanded ? 'justify-start space-x-3' : 'justify-center'
+            expanded ? 'justify-start space-x-3' : 'justify-center  w-10 h-10'
           } px-4 py-3 mx-4 rounded-md font-medium transition-colors
           ${currentPage === 'dashboard' ? 'bg-[#22C55E] text-white' : 'text-green-200 hover:bg-green-600'}
         `}
           title="Dashboard"
         >
-          <CircleGauge className="w-5 h-5 cursor-pointer" />
+          <RiDashboard3Fill className="w-6 h-6 cursor-pointer shrink-0" />
           {expanded && <span className='cursor-pointer'>Dashboard</span>}
         </button>
 

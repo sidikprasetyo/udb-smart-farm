@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, JSX } from 'react';
 import Head from 'next/head';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -8,6 +8,15 @@ import Dashboard from '@/components/Dashboard';
 import { DashboardData, SensorData } from '@/types/dashboard';
 import { ref, onValue, off } from 'firebase/database';
 import { database } from '@/lib/firebaseConfig';
+import {
+  WiHumidity,
+  WiRaindrops,
+  WiStrongWind,
+  WiSolarEclipse,
+  WiThermometer,
+} from 'react-icons/wi';
+import { MdOpacity, MdDeviceThermostat } from 'react-icons/md';
+import { SlChemistry } from "react-icons/sl";
 
 const Home: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData>({
@@ -16,65 +25,73 @@ const Home: React.FC = () => {
       name: 'Soil Moisture',
       value: 'Loading...',
       status: 'normal',
-      icon: '💧',
-      progress: 0
+      icon: '',
+      progress: 0,
+      color: ''
     },
     soilPH: {
       id: 'soil-ph',
       name: 'Soil PH',
       value: 'Loading...',
       status: 'normal',
-      icon: '🧪',
-      progress: 0
+      icon: '',
+      progress: 0,
+      color: ''
     },
     windSpeed: {
       id: 'wind-speed',
       name: 'Wind Speed',
       value: 'Loading...',
       status: 'normal',
-      icon: '💨',
-      progress: 0
+      icon: '',
+      progress: 0,
+      color: ''
     },
     rainfall: {
       id: 'rainfall',
       name: 'Rainfall',
       value: 'Loading...',
       status: 'normal',
-      icon: '🌧️',
-      progress: 0
+      icon: '',
+      progress: 0,
+      color: ''
     },
     radiation: {
       id: 'radiation',
       name: 'Radiation',
       value: 'Loading...',
       status: 'normal',
-      icon: '☀️',
-      progress: 0
+      icon: '',
+      progress: 0,
+      color: ''
     },
     soilTemperature: {
       id: 'soil-temp',
       name: 'Soil Temperature',
       value: 'Loading...',
       status: 'normal',
-      icon: '🌡️',
-      progress: 0
+      icon: '',
+      progress: 0,
+      color: ''
     },
     dhtTemperature: {
       id: 'dht-temp',
       name: 'DHT Temperature',
       value: 'Loading...',
       status: 'normal',
-      icon: '🔥',
-      progress: 0
+      icon: '',
+      progress: 0,
+      color: ''
     },
     dhtHumidity: {
       id: 'dht-humidity',
       name: 'DHT Humidity',
       value: 'Loading...',
       status: 'normal',
-      icon: '💧',
-      progress: 0
-    }
+      icon: '',
+      progress: 0,
+      color: ''
+    },
   });
 
   useEffect(() => {
@@ -89,15 +106,26 @@ const Home: React.FC = () => {
       dht_humidity: 'dhtHumidity',
     };
 
-    const defaultIcons: { [key in keyof DashboardData]: string } = {
-      soilMoisture: '💧',
-      soilPH: '🧪',
-      windSpeed: '💨',
-      rainfall: '🌧️',
-      radiation: '☀️',
-      soilTemperature: '🌡️',
-      dhtTemperature: '🔥',
-      dhtHumidity: '💧',
+    const defaultColors: { [key in keyof DashboardData]: string } = {
+      soilMoisture: 'bg-green-600',
+      soilPH: 'bg-purple-500',
+      windSpeed: 'bg-blue-400',
+      rainfall: 'bg-blue-600',
+      radiation: 'bg-yellow-500',
+      soilTemperature: 'bg-red-500',
+      dhtTemperature: 'bg-orange-500',
+      dhtHumidity: 'bg-cyan-500',
+    };
+
+    const defaultIcons: { [key in keyof DashboardData]: JSX.Element } = {
+      soilMoisture: <MdOpacity className="w-7 h-7 text-green-600" />,
+      soilPH: <SlChemistry className="w-7 h-7 text-purple-500" />,
+      windSpeed: <WiStrongWind className="w-7 h-7 text-blue-400" />,
+      rainfall: <WiRaindrops className="w-7 h-7 text-blue-600" />,
+      radiation: <WiSolarEclipse className="w-7 h-7 text-yellow-500" />,
+      soilTemperature: <WiThermometer className="w-7 h-7 text-red-500" />,
+      dhtTemperature: <MdDeviceThermostat className="w-7 h-7 text-orange-500" />,
+      dhtHumidity: <WiHumidity className="w-7 h-7 text-cyan-500" />,
     };
 
     const units: { [key in keyof DashboardData]: string } = {
@@ -109,6 +137,17 @@ const Home: React.FC = () => {
       soilTemperature: '°C',
       dhtTemperature: '°C',
       dhtHumidity: '%',
+    };
+
+    const labelNames: { [key in keyof DashboardData]: string } = {
+      soilMoisture: 'Soil Moisture',
+      soilPH: 'Soil PH',
+      windSpeed: 'Wind Speed',
+      rainfall: 'Rainfall',
+      radiation: 'Radiation',
+      soilTemperature: 'Soil Temperature',
+      dhtTemperature: 'DHT Temperature',
+      dhtHumidity: 'DHT Humidity',
     };
 
     const calculateStatus = (key: string, value: number): SensorData['status'] => {
@@ -150,12 +189,12 @@ const Home: React.FC = () => {
             ...prevData,
             [dashboardKey]: {
               id: dashboardKey,
-              name: dashboardKey.replace(/([A-Z])/g, ' $1'),
+              name: labelNames[dashboardKey],
               value: unit ? `${value}${unit}` : value,
-              // unit: unit || '',
               status,
               icon: defaultIcons[dashboardKey],
               progress,
+              color: defaultColors[dashboardKey],
             },
           }));
         }
@@ -165,7 +204,6 @@ const Home: React.FC = () => {
       listeners.push({ ref: sensorRef, callback });
     });
 
-    // Cleanup function
     return () => {
       listeners.forEach(({ ref, callback }) => {
         off(ref, 'value', callback);
@@ -183,7 +221,6 @@ const Home: React.FC = () => {
 
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar currentPage="dashboard" />
-
         <div className="flex-1">
           <Header title="Dashboard" userName="Admin" />
           <Dashboard data={dashboardData} />

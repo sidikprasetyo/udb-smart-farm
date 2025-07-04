@@ -6,6 +6,7 @@ export interface SensorData {
   status: 'optimal' | 'normal' | 'high' | 'low' | 'medium';
   icon: string;
   progress: number;
+  color: string;
 }
 
 export interface DashboardData {
