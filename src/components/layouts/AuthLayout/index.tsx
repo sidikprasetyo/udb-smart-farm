@@ -4,17 +4,17 @@ import Link from "next/link";
 
 interface AuthLayoutProps {
   title: "login" | "register" | "otp";
-  onSubmit: (data: Record<string, any>) => void;
+  onSubmit: (data?: Record<string, any>) => void;
   children: React.ReactNode;
   selfRegist?: boolean;
+  loading?: boolean;
 }
 
-const AuthLayout: React.FC<AuthLayoutProps> = ({ title, onSubmit, children, selfRegist }) => {
+const AuthLayout: React.FC<AuthLayoutProps> = ({ title, onSubmit, children, selfRegist, loading = false }) => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData);
-    onSubmit(data);
+    // Call onSubmit without formData since we're using controlled inputs
+    onSubmit();
   };
   return (
     <div className="wrapper w-full h-screen bg-slate-200 relative">
@@ -62,10 +62,10 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ title, onSubmit, children, self
             </div>
           )}
 
-          <Button>
+          <Button disabled={loading} type="submit">
             <div className="flex items-center justify-center gap-2 w-full">
               <IoLogIn className="text-xl text-white" />
-              <span className="text-white font-semibold">{title === "login" ? "Login" : title === "register" ? "Register" : "Submit OTP"}</span>
+              <span className="text-white font-semibold">{loading ? "Please wait..." : title === "login" ? "Login" : title === "register" ? "Register" : "Submit OTP"}</span>
             </div>
           </Button>
         </form>

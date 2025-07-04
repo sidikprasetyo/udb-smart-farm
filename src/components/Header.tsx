@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { CircleUserRound } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { CircleUserRound } from "lucide-react";
+import useLogout from "@/hooks/useLogout";
 
 interface HeaderProps {
   title: string;
@@ -9,6 +10,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ title, userName }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { handleLogout } = useLogout();
 
   // Close dropdown jika klik di luar
   useEffect(() => {
@@ -18,8 +20,8 @@ const Header: React.FC<HeaderProps> = ({ title, userName }) => {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -29,10 +31,7 @@ const Header: React.FC<HeaderProps> = ({ title, userName }) => {
 
       {/* Profil admin */}
       <div className="relative" ref={dropdownRef}>
-        <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center space-x-2 focus:outline-none"
-        >
+        <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center space-x-2 focus:outline-none">
           <span className="font-medium text-sm sm:text-base">{userName}</span>
           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
             <CircleUserRound className="w-8 h-8 text-white" />
@@ -41,18 +40,18 @@ const Header: React.FC<HeaderProps> = ({ title, userName }) => {
 
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-28 bg-white rounded-md shadow-md text-sm text-green-700 z-10">
-            <a
-              href="/profile"
-              className="block px-4 py-2 hover:bg-green-100 hover:rounded-t-md"
-            >
+            <a href="/profile" className="block px-4 py-2 hover:bg-green-100 hover:rounded-t-md">
               Profile
             </a>
-            <a
-              href="/logout"
-              className="block px-4 py-2 hover:bg-green-100 hover:rounded-b-md"
+            <button
+              onClick={() => {
+                setDropdownOpen(false);
+                handleLogout();
+              }}
+              className="block w-full text-left px-4 py-2 hover:bg-green-100 hover:rounded-b-md"
             >
               Logout
-            </a>
+            </button>
           </div>
         )}
       </div>
