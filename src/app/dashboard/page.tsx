@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Dashboard from "@/components/Dashboard";
 import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
 import RoleSwitcher from "@/components/RoleSwitcher";
+import MobileMenu from "@/components/MobileMenu";
 import { DashboardData, SensorData } from "@/types/dashboard";
 import { ref, onValue, off } from "firebase/database";
 import { database } from "@/lib/firebaseConfig";
@@ -208,7 +209,7 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <MultiRoleProtectedRoute allowedRoles={["operator", "petani", "user"]}>
+    <MultiRoleProtectedRoute allowedRoles={["operator", "petani"]}>
       <Head>
         <title>Smart Farm Dashboard</title>
         <meta name="description" content="IoT Smart Farm Monitoring Dashboard" />
@@ -216,12 +217,19 @@ const Home: React.FC = () => {
       </Head>
 
       <div className="flex min-h-screen bg-gray-50">
-        <Sidebar currentPage="dashboard" />
+        {/* Mobile Menu for small screens */}
+        <MobileMenu currentPage="dashboard" />
+
+        {/* Sidebar for large screens */}
+        <div className="hidden lg:block">
+          <Sidebar currentPage="dashboard" />
+        </div>
+
         <div className="flex-1">
           <Header title="Dashboard" userName="Admin" />
 
           {/* Add Role Switcher */}
-          <div className="p-6 pb-0">
+          <div className="p-3 sm:p-6 pb-0">
             <RoleSwitcher />
           </div>
 

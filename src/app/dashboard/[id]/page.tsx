@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
+import MobileMenu from "@/components/MobileMenu";
 import SensorGraph from "@/components/Sensor/SensorGraph";
 import SensorHistory from "@/components/Sensor/SensorHistory";
 import SensorPagination from "@/components/Sensor/SensorPagination";
@@ -32,13 +33,19 @@ const SensorDetailPage = () => {
   }, [currentPage]);
 
   return (
-    <MultiRoleProtectedRoute allowedRoles={["user", "admin", "petani", "manager"]}>
+    <MultiRoleProtectedRoute allowedRoles={["user", "operator", "petani", "manager"]}>
       <div className="flex min-h-screen bg-gray-50">
-        <Sidebar currentPage="dashboard" />
+        {/* Mobile Menu for small screens */}
+        <MobileMenu currentPage="dashboard" />
+
+        {/* Sidebar for large screens */}
+        <div className="hidden lg:block">
+          <Sidebar currentPage="dashboard" />
+        </div>
 
         <div className="flex-1">
           <Header title="Dashboard" userName="Admin" />
-          <div className="p-6 bg-gray-50 min-h-screen">
+          <div className="p-3 sm:p-6 bg-gray-50 min-h-screen">
             <div className="flex flex-wrap items-center justify-center mb-4 gap-2">
               <SensorGraph title={sensorId as string} />
             </div>

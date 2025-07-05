@@ -26,8 +26,8 @@ const Header: React.FC<HeaderProps> = ({ title, userName }) => {
 
   return (
     <header className="bg-[#166534] text-white px-4 sm:px-6 py-3 sm:py-4 my-2 me-2 rounded-md flex justify-between items-center flex-wrap">
-      {/* Judul halaman */}
-      <h1 className="text-lg sm:text-2xl font-semibold mb-2 sm:mb-0">{title}</h1>
+      {/* Judul halaman - adjust margin for mobile menu button */}
+      <h1 className="text-lg sm:text-2xl font-semibold mb-2 sm:mb-0 ml-16 lg:ml-0">{title}</h1>
 
       {/* Profil admin */}
       <div className="relative" ref={dropdownRef}>
