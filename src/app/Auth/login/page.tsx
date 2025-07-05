@@ -3,17 +3,40 @@
 import LoginFragment from "@/components/fragments/LoginFragment";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import { loginWithEmailAndPassword } from "@/lib/firebaseAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const { user, loading } = useAuth();
+  const [loginLoading, setLoginLoading] = useState(false);
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
   });
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
+
+  // Show loading if checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Don't render login form if user is already authenticated
+  if (user) {
+    return null;
+  }
 
   const handleSubmit = async () => {
     // Validate input
@@ -25,7 +48,7 @@ const LoginPage = () => {
       return;
     }
 
-    setLoading(true);
+    setLoginLoading(true);
 
     try {
       console.log("Attempting login with:", loginData);
@@ -54,7 +77,7 @@ const LoginPage = () => {
         },
       });
     } finally {
-      setLoading(false);
+      setLoginLoading(false);
     }
   };
 
@@ -67,7 +90,7 @@ const LoginPage = () => {
   };
 
   return (
-    <AuthLayout title="login" onSubmit={handleSubmit} selfRegist={false} loading={loading}>
+    <AuthLayout title="login" onSubmit={handleSubmit} selfRegist={false} loading={loginLoading}>
       <LoginFragment loginData={loginData} onChange={handleChange} />
     </AuthLayout>
   );

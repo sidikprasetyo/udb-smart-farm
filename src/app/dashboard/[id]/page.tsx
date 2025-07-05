@@ -1,12 +1,13 @@
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
-import SensorGraph from '@/components/Sensor/SensorGraph';
-import SensorHistory from '@/components/Sensor/SensorHistory';
-import SensorPagination from '@/components/Sensor/SensorPagination';
+import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import SensorGraph from "@/components/Sensor/SensorGraph";
+import SensorHistory from "@/components/Sensor/SensorHistory";
+import SensorPagination from "@/components/Sensor/SensorPagination";
 
 const SensorDetailPage = () => {
   const { id: sensorId } = useParams();
@@ -17,11 +18,11 @@ const SensorDetailPage = () => {
   // Dummy semua data
   const allData = Array.from({ length: 75 }, (_, i) => ({
     id: i + 1,
-    name: 'Soil Moisture',
-    value: '72%',
-    status: 'Optimal',
-    icon: '💧',
-    timestamp: '10-12-2025 | 01:45',
+    name: "Soil Moisture",
+    value: "72%",
+    status: "Optimal",
+    icon: "💧",
+    timestamp: "10-12-2025 | 01:45",
   }));
 
   useEffect(() => {
@@ -31,24 +32,22 @@ const SensorDetailPage = () => {
   }, [currentPage]);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar currentPage="dashboard" />
+    <ProtectedRoute>
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar currentPage="dashboard" />
 
-      <div className="flex-1">
-        <Header title="Dashboard" userName="Admin" />
-        <div className="p-6 bg-gray-50 min-h-screen">
-          <div className='flex flex-wrap items-center justify-center mb-4 gap-2'>
-            <SensorGraph  title={sensorId as string} />
+        <div className="flex-1">
+          <Header title="Dashboard" userName="Admin" />
+          <div className="p-6 bg-gray-50 min-h-screen">
+            <div className="flex flex-wrap items-center justify-center mb-4 gap-2">
+              <SensorGraph title={sensorId as string} />
+            </div>
+            <SensorHistory data={historyData} />
+            <SensorPagination currentPage={currentPage} totalPages={Math.ceil(allData.length / recordsPerPage)} onPageChange={setCurrentPage} />
           </div>
-          <SensorHistory data={historyData} />
-          <SensorPagination
-            currentPage={currentPage}
-            totalPages={Math.ceil(allData.length / recordsPerPage)}
-            onPageChange={setCurrentPage}
-          />
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 
