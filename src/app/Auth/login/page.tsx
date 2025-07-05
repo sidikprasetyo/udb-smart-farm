@@ -2,7 +2,7 @@
 
 import LoginFragment from "@/components/fragments/LoginFragment";
 import AuthLayout from "@/components/layouts/AuthLayout";
-import { loginWithEmailAndPassword } from "@/lib/firebaseAuth";
+import { loginWithEmailAndPassword, getUserProfile } from "@/lib/firebaseAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
@@ -55,15 +55,48 @@ const LoginPage = () => {
 
       const result = await loginWithEmailAndPassword(loginData.email, loginData.password);
 
-      if (result.success) {
-        // Store user token/info if needed
-        localStorage.setItem("user", JSON.stringify(result.user));
-        console.log("Login successful:", result);
+      if (result.success && result.user) {
+        // Get user profile with roles from Firestore
+        const profileResult = await getUserProfile(result.user.uid);
 
-        // Small delay to show success message before redirect
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1500);
+        if (profileResult.success) {
+          const userData = profileResult.data;
+          const primaryRole = userData?.primaryRole || "user";
+
+          // Store user info with roles
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...result.user,
+              roles: userData?.roles || ["user"],
+              primaryRole: primaryRole,
+            })
+          );
+
+          console.log("Login successful with roles:", userData?.roles);
+
+          // Redirect based on primary role
+          setTimeout(() => {
+            switch (primaryRole) {
+              case "admin":
+                router.push("/admin/dashboard");
+                break;
+              case "petani":
+                router.push("/petani/dashboard");
+                break;
+              case "manager":
+                router.push("/manager/dashboard");
+                break;
+              default:
+                router.push("/dashboard");
+            }
+          }, 1500);
+        } else {
+          // If no profile found, create default and redirect
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 1500);
+        }
       }
       // Error handling is now done in firebaseAuth.ts with toast notifications
     } catch (error) {

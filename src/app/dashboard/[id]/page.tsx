@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
 import SensorGraph from "@/components/Sensor/SensorGraph";
 import SensorHistory from "@/components/Sensor/SensorHistory";
 import SensorPagination from "@/components/Sensor/SensorPagination";
@@ -32,7 +32,7 @@ const SensorDetailPage = () => {
   }, [currentPage]);
 
   return (
-    <ProtectedRoute>
+    <MultiRoleProtectedRoute allowedRoles={["user", "admin", "petani", "manager"]}>
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar currentPage="dashboard" />
 
@@ -47,7 +47,7 @@ const SensorDetailPage = () => {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </MultiRoleProtectedRoute>
   );
 };
 

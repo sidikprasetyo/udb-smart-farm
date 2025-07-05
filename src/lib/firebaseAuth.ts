@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, setDoc, doc, getDoc } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 import toast from "react-hot-toast";
 
@@ -64,12 +64,15 @@ export const loginWithEmailAndPassword = async (email: string, password: string)
   }
 };
 
-export const registerWithEmailAndPassword = async (email: string, password: string) => {
+export const registerWithEmailAndPassword = async (email: string, password: string, additionalData: any = {}) => {
   try {
     // Show loading toast
     const loadingToast = toast.loading("Creating your account...");
 
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+    // Create user profile in Firestore
+    await createUserProfile(userCredential.user.uid, email, additionalData);
 
     // Dismiss loading toast and show success
     toast.dismiss(loadingToast);
@@ -146,6 +149,53 @@ export const logout = async () => {
       error: error.code,
       message: "Logout failed",
     };
+  }
+};
+
+// Function to create user profile in Firestore
+export const createUserProfile = async (uid: string, email: string, additionalData: any = {}) => {
+  try {
+    const userRef = doc(firestore, "users", uid);
+
+    // Check if user profile already exists
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      const defaultUserData = {
+        uid,
+        email,
+        roles: ["user"], // Default role
+        primaryRole: "user",
+        name: additionalData.name || email.split("@")[0],
+        createdAt: new Date(),
+        ...additionalData,
+      };
+
+      await setDoc(userRef, defaultUserData);
+      console.log("User profile created in Firestore");
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating user profile:", error);
+    return { success: false, error };
+  }
+};
+
+// Function to get user profile from Firestore
+export const getUserProfile = async (uid: string) => {
+  try {
+    const userRef = doc(firestore, "users", uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      return { success: true, data: userSnap.data() };
+    } else {
+      return { success: false, error: "User profile not found" };
+    }
+  } catch (error) {
+    console.error("Error getting user profile:", error);
+    return { success: false, error };
   }
 };
 
