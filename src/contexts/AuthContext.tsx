@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, setDoc } from "firebase/firestore";
 import { auth } from "@/lib/firebaseAuth";
 import { firestore } from "@/lib/firebaseAuth";
 
@@ -44,13 +44,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          // Ambil data roles dari Firestore
-          const userDoc = await getDoc(doc(firestore, "users", user.uid));
-          const userData = userDoc.data();
+          // Ambil data roles dari collection "staff" berdasarkan email
+          const staffDoc = await getDoc(doc(firestore, "staff", user.email || ""));
+
+          let userData = null;
+          let dataSource = "";
+
+          if (staffDoc.exists()) {
+            userData = staffDoc.data();
+            dataSource = "staff";
+          } else {
+            // Jika tidak ada di staff, coba cari di collection "users" (fallback)
+            const userDoc = await getDoc(doc(firestore, "users", user.uid));
+            if (userDoc.exists()) {
+              userData = userDoc.data();
+              dataSource = "users";
+            } else {
+              // Special case: auto-create kepin@gmail.com if not found
+              if (user.email === "kepin@gmail.com") {
+                try {
+                  const staffData = {
+                    email: "kepin@gmail.com",
+                    username: "Bowo",
+                    roles: ["operator"],
+                    primaryRole: "operator",
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                  };
+
+                  await setDoc(doc(firestore, "staff", "kepin@gmail.com"), staffData);
+                  userData = staffData;
+                  dataSource = "auto-created";
+                } catch (createError) {
+                  console.error("Failed to auto-create staff record:", createError);
+                }
+              }
+            }
+          }
 
           if (userData) {
-            setUserRoles(userData.roles || []);
-            setPrimaryRole(userData.primaryRole || null);
+            // Ambil roles dari field "roles" (array) dan primaryRole dari field "primaryRole"
+            const roles = userData.roles || [];
+            const primaryRole = userData.primaryRole || null;
+
+            setUserRoles(roles);
+            setPrimaryRole(primaryRole);
           } else {
             // Jika belum ada data di Firestore, set default
             setUserRoles(["user"]);

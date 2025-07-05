@@ -1,20 +1,46 @@
 // Utility functions untuk manage user roles
 
-import { setDoc, doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { setDoc, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "firebase/firestore";
 import { firestore } from "@/lib/firebaseAuth";
 
 export interface UserRoleData {
-  uid: string;
   email: string;
+  username?: string;
   roles: string[];
   primaryRole: string;
-  name?: string;
+  uid?: string; // Optional for staff collection
 }
 
-// Membuat user dengan multiple roles
+export interface StaffRoleData {
+  email: string;
+  username: string;
+  roles: string[];
+  primaryRole: string;
+}
+
+// Membuat staff dengan multiple roles (menggunakan email sebagai document ID)
+export const createStaffWithRoles = async (staffData: StaffRoleData) => {
+  try {
+    await setDoc(doc(firestore, "staff", staffData.email), {
+      ...staffData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating staff with roles:", error);
+    return { success: false, error };
+  }
+};
+
+// Membuat user dengan multiple roles (menggunakan UID sebagai document ID)
 export const createUserWithRoles = async (userData: UserRoleData) => {
   try {
-    await setDoc(doc(firestore, "users", userData.uid), {
+    const docId = userData.uid || userData.email;
+    const collection = userData.uid ? "users" : "staff";
+
+    await setDoc(doc(firestore, collection, docId), {
       ...userData,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -27,10 +53,11 @@ export const createUserWithRoles = async (userData: UserRoleData) => {
   }
 };
 
-// Menambah role ke user yang sudah ada
-export const addRoleToUser = async (uid: string, newRole: string) => {
+// Menambah role ke user yang sudah ada (mendukung staff dan users collection)
+export const addRoleToUser = async (identifier: string, newRole: string, useEmail: boolean = false) => {
   try {
-    const userRef = doc(firestore, "users", uid);
+    const collection = useEmail ? "staff" : "users";
+    const userRef = doc(firestore, collection, identifier);
 
     await updateDoc(userRef, {
       roles: arrayUnion(newRole),
@@ -44,10 +71,11 @@ export const addRoleToUser = async (uid: string, newRole: string) => {
   }
 };
 
-// Menghapus role dari user
-export const removeRoleFromUser = async (uid: string, roleToRemove: string) => {
+// Menghapus role dari user (mendukung staff dan users collection)
+export const removeRoleFromUser = async (identifier: string, roleToRemove: string, useEmail: boolean = false) => {
   try {
-    const userRef = doc(firestore, "users", uid);
+    const collection = useEmail ? "staff" : "users";
+    const userRef = doc(firestore, collection, identifier);
 
     await updateDoc(userRef, {
       roles: arrayRemove(roleToRemove),
@@ -61,10 +89,11 @@ export const removeRoleFromUser = async (uid: string, roleToRemove: string) => {
   }
 };
 
-// Mengubah primary role user
-export const updatePrimaryRole = async (uid: string, newPrimaryRole: string) => {
+// Mengubah primary role user (mendukung staff dan users collection)
+export const updatePrimaryRole = async (identifier: string, newPrimaryRole: string, useEmail: boolean = false) => {
   try {
-    const userRef = doc(firestore, "users", uid);
+    const collection = useEmail ? "staff" : "users";
+    const userRef = doc(firestore, collection, identifier);
 
     await updateDoc(userRef, {
       primaryRole: newPrimaryRole,
@@ -81,24 +110,43 @@ export const updatePrimaryRole = async (uid: string, newPrimaryRole: string) => 
 // Contoh data untuk testing
 export const sampleUsers = [
   {
-    uid: "admin_user_1",
     email: "admin@smartfarm.com",
     roles: ["admin"],
     primaryRole: "admin",
-    name: "System Administrator",
+    username: "System Administrator",
   },
   {
-    uid: "petani_user_1",
     email: "petani@smartfarm.com",
     roles: ["petani"],
     primaryRole: "petani",
-    name: "Farmer User",
+    username: "Farmer User",
   },
   {
-    uid: "multi_role_user_1",
     email: "manager@smartfarm.com",
-    roles: ["admin", "petani", "manager"],
-    primaryRole: "manager",
-    name: "Multi Role Manager",
+    roles: ["admin", "petani", "operator"],
+    primaryRole: "operator",
+    username: "Multi Role Manager",
+  },
+  {
+    email: "kepin@gmail.com",
+    roles: ["operator"],
+    primaryRole: "operator",
+    username: "Bowo",
   },
 ];
+
+// Helper function untuk mendapatkan data user berdasarkan email dari staff collection
+export const getUserByEmail = async (email: string) => {
+  try {
+    const staffDoc = await getDoc(doc(firestore, "staff", email));
+
+    if (staffDoc.exists()) {
+      return { success: true, data: staffDoc.data() };
+    } else {
+      return { success: false, error: "User not found in staff collection" };
+    }
+  } catch (error) {
+    console.error("Error getting user by email:", error);
+    return { success: false, error };
+  }
+};

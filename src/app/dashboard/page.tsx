@@ -208,7 +208,7 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <MultiRoleProtectedRoute allowedRoles={["operator", "petani", ""]}>
+    <MultiRoleProtectedRoute allowedRoles={["operator", "petani", "user"]}>
       <Head>
         <title>Smart Farm Dashboard</title>
         <meta name="description" content="IoT Smart Farm Monitoring Dashboard" />

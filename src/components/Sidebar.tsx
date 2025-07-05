@@ -1,9 +1,11 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Sprout } from 'lucide-react';
-import { RiDashboard3Fill } from 'react-icons/ri';
-import Link from 'next/link';
+import React, { useEffect, useState } from "react";
+import { Sprout } from "lucide-react";
+import { RiDashboard3Fill } from "react-icons/ri";
+import { FaUsers } from "react-icons/fa";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   currentPage: string;
@@ -11,6 +13,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
   const [, setIsMobile] = useState(false);
+  const { hasAnyRole } = useAuth();
 
   useEffect(() => {
     const handleResize = () => {
@@ -18,8 +21,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
     };
 
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
@@ -51,20 +54,34 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
           <button
             className={`
               flex items-center px-2 py-2 mx-4 rounded-md font-medium transition-all duration-300
-              ${currentPage === 'dashboard' ? 'bg-[#22C55E] text-white' : 'text-green-200 hover:bg-green-600'}
+              ${currentPage === "dashboard" ? "bg-[#22C55E] text-white" : "text-green-200 hover:bg-green-600"}
             `}
             title="Dashboard"
           >
             <div className="w-6 h-6 flex justify-center items-center cursor-pointer">
               <RiDashboard3Fill className="w-6 h-6 shrink-0" />
             </div>
-            <span
-              className="ml-3 hidden group-hover:inline-block  group-hover:w-38 group-hover:text-start transition-all duration-300 cursor-pointer"
-            >
-              Dashboard
-            </span>
+            <span className="ml-3 hidden group-hover:inline-block  group-hover:w-38 group-hover:text-start transition-all duration-300 cursor-pointer">Dashboard</span>
           </button>
         </Link>
+
+        {/* Staff Management - hanya untuk admin/operator */}
+        {hasAnyRole(["admin", "operator"]) && (
+          <Link href="/admin/staff" passHref>
+            <button
+              className={`
+                flex items-center px-2 py-2 mx-4 rounded-md font-medium transition-all duration-300
+                ${currentPage === "admin" ? "bg-[#22C55E] text-white" : "text-green-200 hover:bg-green-600"}
+              `}
+              title="Staff Management"
+            >
+              <div className="w-6 h-6 flex justify-center items-center cursor-pointer">
+                <FaUsers className="w-6 h-6 shrink-0" />
+              </div>
+              <span className="ml-3 hidden group-hover:inline-block  group-hover:w-38 group-hover:text-start transition-all duration-300 cursor-pointer">Staff Management</span>
+            </button>
+          </Link>
+        )}
       </div>
     </div>
   );
