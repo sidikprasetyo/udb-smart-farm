@@ -36,9 +36,10 @@ const SensorDetailPage = () => {
 
       <div className="flex-1">
         <Header title="Dashboard" userName="Admin" />
-
-        <div className="p-6">
-          <SensorGraph title={sensorId as string} />
+        <div className="p-6 bg-gray-50 min-h-screen">
+          <div className='flex flex-wrap items-center justify-center mb-4 gap-2'>
+            <SensorGraph  title={sensorId as string} />
+          </div>
           <SensorHistory data={historyData} />
           <SensorPagination
             currentPage={currentPage}

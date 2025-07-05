@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { Sprout } from 'lucide-react';
-import { RiDashboard3Fill } from "react-icons/ri";
+import { RiDashboard3Fill } from 'react-icons/ri';
 import Link from 'next/link';
 
 interface SidebarProps {
@@ -8,54 +10,62 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
-  const [expanded, setExpanded] = useState(true);
   const [, setIsMobile] = useState(false);
 
-  // Responsif berdasarkan ukuran layar
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // < md (768px)
-      if (window.innerWidth < 768) setExpanded(false); // collapse di mobile
+      setIsMobile(window.innerWidth < 768);
     };
 
-    handleResize(); // jalankan saat pertama kali load
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
     <div
-      className={`bg-[#166534] text-white min-h-screen rounded-md transition-all duration-300
-      ${expanded ? 'w-60' : 'w-20'} flex flex-col ms-2 me-1 my-2`}
+      className={`
+        bg-[#166534] text-white min-h-screen rounded-md transition-all duration-300
+        w-20 hover:w-60 group
+        flex flex-col ms-2 me-1 my-2
+      `}
     >
-      {/* Logo + Toggle */}
-      <div
-        className="flex items-center px-4 py-4 cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-          <Sprout className="w-7 h-7 text-white" />
+      {/* Logo + Brand Name */}
+      <div className="flex items-center px-4 py-4 cursor-pointer overflow-hidden">
+        <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center group-hover:bg-transparent group-hover:duration-300">
+          <Sprout className="w-10 h-10 text-white group-hover:text-[#86efac]" />
         </div>
-        {expanded && <span className="ml-3 text-xl font-bold">Smart Farm</span>}
-      </div>
-
-      {/* Navigasi */}
-      <Link href="/dashboard" passHref>
-      <div className="mt-3 flex flex-col space-y-2">
-        <button
-          className={`flex items-center ${
-            expanded ? 'justify-start space-x-3' : 'justify-center  w-10 h-10'
-          } px-4 py-3 mx-4 rounded-md font-medium transition-colors
-          ${currentPage === 'dashboard' ? 'bg-[#22C55E] text-white' : 'text-green-200 hover:bg-green-600'}
-        `}
-          title="Dashboard"
+        <span
+          className="
+            ml-1 text-2xl font-bold
+            hidden group-hover:inline-block whitespace-nowrap transition-all duration-300
+          "
         >
-          <RiDashboard3Fill className="w-6 h-6 cursor-pointer shrink-0" />
-          {expanded && <span className='cursor-pointer'>Dashboard</span>}
-        </button>
-
+          Smart Farm
+        </span>
       </div>
-      </Link>
+
+      {/* Navigation */}
+      <div className="mt-3 flex flex-col space-y-2">
+        <Link href="/dashboard" passHref>
+          <button
+            className={`
+              flex items-center px-2 py-2 mx-4 rounded-md font-medium transition-all duration-300
+              ${currentPage === 'dashboard' ? 'bg-[#22C55E] text-white' : 'text-green-200 hover:bg-green-600'}
+            `}
+            title="Dashboard"
+          >
+            <div className="w-6 h-6 flex justify-center items-center cursor-pointer">
+              <RiDashboard3Fill className="w-6 h-6 shrink-0" />
+            </div>
+            <span
+              className="ml-3 hidden group-hover:inline-block  group-hover:w-38 group-hover:text-start transition-all duration-300 cursor-pointer"
+            >
+              Dashboard
+            </span>
+          </button>
+        </Link>
+      </div>
     </div>
   );
 };
