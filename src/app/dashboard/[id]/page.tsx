@@ -35,22 +35,42 @@ const SensorDetailPage = () => {
   return (
     <MultiRoleProtectedRoute allowedRoles={["user", "operator", "petani", "manager"]}>
       <div className="flex min-h-screen bg-gray-50">
-        {/* Mobile Menu for small screens */}
+        {/* Mobile Menu */}
         <MobileMenu currentPage="dashboard" />
 
-        {/* Sidebar for large screens */}
+        {/* Sidebar - Hidden on mobile, show on tablet+ */}
         <div className="hidden lg:block">
           <Sidebar currentPage="dashboard" />
         </div>
 
-        <div className="flex-1">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
           <Header title="Dashboard" userName="Admin" />
-          <div className="p-3 sm:p-6 bg-gray-50 min-h-screen">
-            <div className="flex flex-wrap items-center justify-center mb-4 gap-2">
-              <SensorGraph title={sensorId as string} />
+          
+          {/* Content Container with responsive padding */}
+          <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 2xl:p-12 bg-gray-50 min-h-screen">
+            
+            {/* Sensor Graph Container */}
+            <div className="mb-4 md:mb-6 lg:mb-8">
+              <div className="w-full max-w-full overflow-hidden">
+                <SensorGraph title={sensorId as string} />
+              </div>
             </div>
-            <SensorHistory data={historyData} />
-            <SensorPagination currentPage={currentPage} totalPages={Math.ceil(allData.length / recordsPerPage)} onPageChange={setCurrentPage} />
+            
+            {/* History and Pagination Container */}
+            <div className="space-y-4 md:space-y-6">
+              <div className="w-full overflow-x-auto">
+                <SensorHistory data={historyData} />
+              </div>
+              
+              <div className="flex justify-center">
+                <SensorPagination 
+                  currentPage={currentPage} 
+                  totalPages={Math.ceil(allData.length / recordsPerPage)} 
+                  onPageChange={setCurrentPage} 
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

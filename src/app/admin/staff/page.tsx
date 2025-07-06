@@ -10,17 +10,20 @@ const AdminStaffPage = () => {
   return (
     <MultiRoleProtectedRoute allowedRoles={["admin", "operator"]}>
       <div className="flex min-h-screen bg-gray-50">
-        {/* Mobile Menu for small screens */}
+        {/* Mobile Menu */}
         <MobileMenu currentPage="admin" />
 
-        {/* Sidebar for large screens */}
+        {/* Sidebar - Hidden on mobile, show on tablet+ */}
         <div className="hidden lg:block">
           <Sidebar currentPage="admin" />
         </div>
-
-        <div className="flex-1">
+        
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
           <Header title="Staff Management" userName="Admin" />
-          <div className="p-3 sm:p-6">
+          
+          {/* Content Container with responsive padding */}
+          <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 2xl:p-12">
             <StaffManagement />
           </div>
         </div>
