@@ -10,12 +10,14 @@ export interface SensorData {
 }
 
 export interface DashboardData {
-  soilMoisture: SensorData;
-  soilPH: SensorData;
-  windSpeed: SensorData;
-  rainfall: SensorData;
-  radiation: SensorData;
-  soilTemperature: SensorData;
-  dhtTemperature: SensorData;
-  dhtHumidity: SensorData;
+  curah_hujan: SensorData;
+  dht_humidity: SensorData;
+  dht_temperature: SensorData;
+  kecepatan_angin: SensorData;
+  kelembaban: SensorData;
+  kelembaban_tanah: SensorData;
+  ph_tanah: SensorData;
+  radiasi: SensorData;
+  suhu: SensorData;
+  timestamp: string;
 }

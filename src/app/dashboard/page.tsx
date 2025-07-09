@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, JSX } from "react";
 import Head from "next/head";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/Sidebar-new";
 import Header from "@/components/Header";
 import Dashboard from "@/components/Dashboard";
 import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
@@ -11,41 +11,20 @@ import MobileMenu from "@/components/MobileMenu";
 import { DashboardData, SensorData } from "@/types/dashboard";
 import { ref, onValue } from "firebase/database";
 import { database } from "@/lib/firebaseConfig";
-import { WiHumidity, WiRaindrops, WiStrongWind, WiSolarEclipse, WiThermometer } from "react-icons/wi";
+import {
+  WiHumidity,
+  WiRaindrops,
+  WiStrongWind,
+  WiSolarEclipse,
+  WiThermometer,
+} from "react-icons/wi";
 import { MdOpacity, MdDeviceThermostat } from "react-icons/md";
 import { SlChemistry } from "react-icons/sl";
 
 const Home: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData>({
-    soilMoisture: {
-      id: "soil-moisture",
-      name: "Soil Moisture",
-      value: "Loading...",
-      status: "normal",
-      icon: "",
-      progress: 0,
-      color: "",
-    },
-    soilPH: {
-      id: "soil-ph",
-      name: "Soil PH",
-      value: "Loading...",
-      status: "normal",
-      icon: "",
-      progress: 0,
-      color: "",
-    },
-    windSpeed: {
-      id: "wind-speed",
-      name: "Wind Speed",
-      value: "Loading...",
-      status: "normal",
-      icon: "",
-      progress: 0,
-      color: "",
-    },
-    rainfall: {
-      id: "rainfall",
+    curah_hujan: {
+      id: "curah_hujan",
       name: "Rainfall",
       value: "Loading...",
       status: "normal",
@@ -53,35 +32,8 @@ const Home: React.FC = () => {
       progress: 0,
       color: "",
     },
-    radiation: {
-      id: "radiation",
-      name: "Radiation",
-      value: "Loading...",
-      status: "normal",
-      icon: "",
-      progress: 0,
-      color: "",
-    },
-    soilTemperature: {
-      id: "soil-temp",
-      name: "Soil Temperature",
-      value: "Loading...",
-      status: "normal",
-      icon: "",
-      progress: 0,
-      color: "",
-    },
-    dhtTemperature: {
-      id: "dht-temp",
-      name: "DHT Temperature",
-      value: "Loading...",
-      status: "normal",
-      icon: "",
-      progress: 0,
-      color: "",
-    },
-    dhtHumidity: {
-      id: "dht-humidity",
+    dht_humidity: {
+      id: "dht_humidity",
       name: "DHT Humidity",
       value: "Loading...",
       status: "normal",
@@ -89,80 +41,147 @@ const Home: React.FC = () => {
       progress: 0,
       color: "",
     },
+    dht_temperature: {
+      id: "dht_temperature",
+      name: "DHT Temperature",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    kecepatan_angin: {
+      id: "kecepatan_angin",
+      name: "Wind Speed",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    kelembaban: {
+      id: "kelembaban",
+      name: "Air Humidity",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    kelembaban_tanah: {
+      id: "kelembaban_tanah",
+      name: "Soil Moisture",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    ph_tanah: {
+      id: "ph_tanah",
+      name: "Soil pH",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    radiasi: {
+      id: "radiasi",
+      name: "Radiation",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    suhu: {
+      id: "suhu",
+      name: "Soil Temperature",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    timestamp: "",
   });
 
-  const defaultColors: { [key in keyof DashboardData]: string } = {
-    soilMoisture: "bg-green-600",
-    soilPH: "bg-purple-500",
-    windSpeed: "bg-blue-400",
-    rainfall: "bg-blue-600",
-    radiation: "bg-yellow-500",
-    soilTemperature: "bg-red-500",
-    dhtTemperature: "bg-orange-500",
-    dhtHumidity: "bg-cyan-500",
+  const defaultColors: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
+    curah_hujan: "bg-blue-600",
+    dht_humidity: "bg-cyan-500",
+    dht_temperature: "bg-orange-500",
+    kecepatan_angin: "bg-blue-400",
+    kelembaban: "bg-green-400",
+    kelembaban_tanah: "bg-green-600",
+    ph_tanah: "bg-purple-500",
+    radiasi: "bg-yellow-500",
+    suhu: "bg-red-500",
   };
 
-  const defaultIcons: { [key in keyof DashboardData]: JSX.Element } = {
-    soilMoisture: <MdOpacity className="w-7 h-7 text-green-600" />,
-    soilPH: <SlChemistry className="w-7 h-7 text-purple-500" />,
-    windSpeed: <WiStrongWind className="w-7 h-7 text-blue-400" />,
-    rainfall: <WiRaindrops className="w-7 h-7 text-blue-600" />,
-    radiation: <WiSolarEclipse className="w-7 h-7 text-yellow-500" />,
-    soilTemperature: <WiThermometer className="w-7 h-7 text-red-500" />,
-    dhtTemperature: <MdDeviceThermostat className="w-7 h-7 text-orange-500" />,
-    dhtHumidity: <WiHumidity className="w-7 h-7 text-cyan-500" />,
+  const defaultIcons: { [key in keyof Omit<DashboardData, "timestamp">]: JSX.Element } = {
+    curah_hujan: <WiRaindrops className="w-7 h-7 text-blue-600" />,
+    dht_humidity: <WiHumidity className="w-7 h-7 text-cyan-500" />,
+    dht_temperature: <MdDeviceThermostat className="w-7 h-7 text-orange-500" />,
+    kecepatan_angin: <WiStrongWind className="w-7 h-7 text-blue-400" />,
+    kelembaban: <WiHumidity className="w-7 h-7 text-green-400" />,
+    kelembaban_tanah: <MdOpacity className="w-7 h-7 text-green-600" />,
+    ph_tanah: <SlChemistry className="w-7 h-7 text-purple-500" />,
+    radiasi: <WiSolarEclipse className="w-7 h-7 text-yellow-500" />,
+    suhu: <WiThermometer className="w-7 h-7 text-red-500" />,
   };
 
-  const units: { [key in keyof DashboardData]: string } = {
-    soilMoisture: "%",
-    soilPH: "",
-    windSpeed: "m/s",
-    rainfall: "mm",
-    radiation: "W/m²",
-    soilTemperature: "°C",
-    dhtTemperature: "°C",
-    dhtHumidity: "%",
+  const units: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
+    curah_hujan: "mm",
+    dht_humidity: "%",
+    dht_temperature: "°C",
+    kecepatan_angin: "m/s",
+    kelembaban: "%",
+    kelembaban_tanah: "%",
+    ph_tanah: "",
+    radiasi: "W/m²",
+    suhu: "°C",
   };
 
-  const labelNames: { [key in keyof DashboardData]: string } = {
-    soilMoisture: "Soil Moisture",
-    soilPH: "Soil PH",
-    windSpeed: "Wind Speed",
-    rainfall: "Rainfall",
-    radiation: "Radiation",
-    soilTemperature: "Soil Temperature",
-    dhtTemperature: "DHT Temperature",
-    dhtHumidity: "DHT Humidity",
+  const labelNames: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
+    curah_hujan: "Rainfall",
+    dht_humidity: "DHT Humidity",
+    dht_temperature: "DHT Temperature",
+    kecepatan_angin: "Wind Speed",
+    kelembaban: "Air Humidity",
+    kelembaban_tanah: "Soil Moisture",
+    ph_tanah: "Soil pH",
+    radiasi: "Radiation",
+    suhu: "Soil Temperature",
   };
 
-  const calculateStatus = (key: keyof DashboardData, value: number): SensorData["status"] => {
+  const calculateStatus = (key: keyof Omit<DashboardData, "timestamp">, value: number): SensorData["status"] => {
     switch (key) {
-      case "soilMoisture":
+      case "kelembaban_tanah":
+      case "kelembaban":
         return value >= 60 ? "optimal" : value >= 40 ? "normal" : "low";
-      case "soilPH":
+      case "ph_tanah":
         return value >= 6 && value <= 7.5 ? "normal" : "high";
-      case "radiation":
+      case "radiasi":
         return value > 5 ? "high" : "normal";
-      case "soilTemperature":
-      case "dhtTemperature":
+      case "suhu":
+      case "dht_temperature":
         return value > 30 ? "high" : value >= 20 ? "normal" : "low";
-      case "dhtHumidity":
+      case "dht_humidity":
         return value >= 60 ? "normal" : "low";
-      case "windSpeed":
+      case "kecepatan_angin":
         return value > 20 ? "high" : "normal";
-      case "rainfall":
+      case "curah_hujan":
         return value > 10 ? "high" : value > 5 ? "medium" : "low";
       default:
         return "normal";
     }
   };
 
-  // Function to load sensor data - similar to the second code
-  const loadSensorData = (sensorId: string, key: keyof DashboardData) => {
+  const loadSensorData = (sensorId: string, key: keyof Omit<DashboardData, "timestamp">) => {
     const sensorRef = ref(database, `sensor/${sensorId}`);
     onValue(sensorRef, (snapshot) => {
       const rawValue = snapshot.val() || "0";
-      
       if (rawValue != null && !isNaN(parseFloat(rawValue))) {
         const value = parseFloat(rawValue);
         const unit = units[key];
@@ -180,24 +199,22 @@ const Home: React.FC = () => {
             progress,
             color: defaultColors[key],
           },
+          timestamp: new Date().toISOString(),
         }));
       }
     });
   };
 
   useEffect(() => {
-    // Load all sensor data using the simplified approach
-    loadSensorData("kelembaban_tanah", "soilMoisture");
-    loadSensorData("ph_tanah", "soilPH");
-    loadSensorData("kecepatan_angin", "windSpeed");
-    loadSensorData("curah_hujan", "rainfall");
-    loadSensorData("radiasi", "radiation");
-    loadSensorData("suhu", "soilTemperature");
-    loadSensorData("dht_temperature", "dhtTemperature");
-    loadSensorData("dht_humidity", "dhtHumidity");
-    
-    // Tambahan untuk sensor kelembaban jika ada
-    // loadSensorData("kelembaban", "humidity");
+    loadSensorData("curah_hujan", "curah_hujan");
+    loadSensorData("dht_humidity", "dht_humidity");
+    loadSensorData("dht_temperature", "dht_temperature");
+    loadSensorData("kecepatan_angin", "kecepatan_angin");
+    loadSensorData("kelembaban", "kelembaban");
+    loadSensorData("kelembaban_tanah", "kelembaban_tanah");
+    loadSensorData("ph_tanah", "ph_tanah");
+    loadSensorData("radiasi", "radiasi");
+    loadSensorData("suhu", "suhu");
   }, []);
 
   return (
@@ -209,24 +226,15 @@ const Home: React.FC = () => {
       </Head>
 
       <div className="flex min-h-screen bg-gray-50">
-        {/* Mobile Menu */}
         <MobileMenu currentPage="dashboard" />
-
-        {/* Sidebar - Fixed on large screens */}
         <div className="hidden lg:flex">
           <Sidebar currentPage="dashboard" />
         </div>
-
-        {/* Main Content - Add left margin to account for fixed sidebar */}
         <div className="flex-1 flex flex-col min-w-0 lg:ml-20 transition-all duration-300">
           <Header title="Dashboard" userName="Admin" />
-
-          {/* Role Switcher with responsive padding */}
           <div className="px-4 sm:px-6 lg:px-8 pt-4 lg:pt-6 pb-0">
             <RoleSwitcher />
           </div>
-
-          {/* Dashboard Content */}
           <div className="flex-1 overflow-hidden">
             <Dashboard data={dashboardData} />
           </div>

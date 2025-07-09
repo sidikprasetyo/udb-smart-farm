@@ -38,6 +38,10 @@ const SensorHistory: React.FC<Props> = ({ data }) => {
           >
             <div className="text-3xl">{item.icon}</div>
             <p className="font-semibold text-gray-800">{item.name}</p>
+
+            {/* ✅ Nilai sensor */}
+            <p className="text-black text-sm">Value: {item.value}</p>
+
             <div className="text-green-600 font-medium text-sm">{item.status}</div>
             <div className="text-sm text-gray-500">{item.timestamp}</div>
           </div>

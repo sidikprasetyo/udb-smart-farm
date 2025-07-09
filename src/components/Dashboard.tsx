@@ -17,14 +17,14 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 
       {/* Sensor Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        <SensorCard sensor={data.soilMoisture} />
-        <SensorCard sensor={data.soilPH} />
-        <SensorCard sensor={data.windSpeed} />
-        <SensorCard sensor={data.rainfall} />
-        <SensorCard sensor={data.radiation} />
-        <SensorCard sensor={data.soilTemperature} />
-        <SensorCard sensor={data.dhtTemperature} />
-        <SensorCard sensor={data.dhtHumidity} />
+        <SensorCard sensor={data.kelembaban_tanah} />
+        <SensorCard sensor={data.ph_tanah} />
+        <SensorCard sensor={data.kecepatan_angin} />
+        <SensorCard sensor={data.curah_hujan} />
+        <SensorCard sensor={data.radiasi} />
+        <SensorCard sensor={data.suhu} />
+        <SensorCard sensor={data.dht_humidity} />
+        <SensorCard sensor={data.dht_temperature} />
       </div>
     </div>
   );
