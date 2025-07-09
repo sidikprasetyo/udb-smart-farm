@@ -220,22 +220,22 @@ const Home: React.FC = () => {
         {/* Mobile Menu */}
         <MobileMenu currentPage="dashboard" />
 
-        {/* Sidebar - Hidden on mobile, show on tablet+ */}
-        <div className="hidden lg:block">
+        {/* Sidebar - Fixed on large screens */}
+        <div className="hidden lg:flex">
           <Sidebar currentPage="dashboard" />
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
+        {/* Main Content - Add left margin to account for fixed sidebar */}
+        <div className="flex-1 flex flex-col min-w-0 lg:ml-20 transition-all duration-300">
           <Header title="Dashboard" userName="Admin" />
 
           {/* Role Switcher with responsive padding */}
-          <div className="p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 2xl:p-12 pb-0">
+          <div className="px-4 sm:px-6 lg:px-8 pt-4 lg:pt-6 pb-0">
             <RoleSwitcher />
           </div>
 
           {/* Dashboard Content */}
-          <div className="flex-1">
+          <div className="flex-1 overflow-hidden">
             <Dashboard data={dashboardData} />
           </div>
         </div>

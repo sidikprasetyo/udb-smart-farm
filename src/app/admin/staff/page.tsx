@@ -13,17 +13,17 @@ const AdminStaffPage = () => {
         {/* Mobile Menu */}
         <MobileMenu currentPage="admin" />
 
-        {/* Sidebar - Hidden on mobile, show on tablet+ */}
+        {/* Sidebar - Fixed on large screens */}
         <div className="hidden lg:block">
           <Sidebar currentPage="admin" />
         </div>
-        
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
+
+        {/* Main Content - Add left margin to account for fixed sidebar */}
+        <div className="flex-1 flex flex-col lg:ml-20 transition-all duration-300">
           <Header title="Staff Management" userName="Admin" />
-          
+
           {/* Content Container with responsive padding */}
-          <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 2xl:p-12">
+          <div className="flex-1 p-4 sm:p-6 lg:p-8">
             <StaffManagement />
           </div>
         </div>
