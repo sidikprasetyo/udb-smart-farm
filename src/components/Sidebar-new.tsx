@@ -26,25 +26,23 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
   }, []);
 
   return (
-    <div className="w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 2xl:w-96 bg-white shadow-lg flex flex-col h-screen border-r border-gray-200">
-      <div className="bg-[#166534] text-white min-h-screen rounded-md transition-all duration-300 w-20 hover:w-60 group flex flex-col ms-2 me-1 my-2">
+    <div className="fixed top-0 left-0 z-30 bg-white shadow-lg flex flex-col h-screen border-r border-gray-200">
+      <div className="bg-[#166534] text-white h-full rounded-lg transition-all duration-300 w-16 lg:w-20 hover:w-56 lg:hover:w-64 group flex flex-col m-2 overflow-hidden">
         {/* Logo + Brand Name */}
-        <div className="flex items-center px-2 sm:px-4 py-3 sm:py-4 cursor-pointer overflow-hidden">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-lg flex items-center justify-center group-hover:bg-transparent group-hover:duration-300">
-            <Sprout className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white group-hover:text-[#86efac]" />
+        <div className="flex items-center px-3 lg:px-4 py-4 lg:py-5 cursor-pointer overflow-hidden">
+          <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-500 rounded-lg flex items-center justify-center group-hover:bg-transparent transition-all duration-300">
+            <Sprout className="w-6 h-6 lg:w-8 lg:h-8 text-white group-hover:text-[#86efac]" />
           </div>
-          <span className="ml-1 text-lg sm:text-xl md:text-2xl font-bold hidden group-hover:inline-block whitespace-nowrap transition-all duration-300">
-            Smart Farm
-          </span>
+          <span className="ml-3 text-lg lg:text-xl xl:text-2xl font-bold hidden group-hover:inline-block whitespace-nowrap transition-all duration-300">Smart Farm</span>
         </div>
 
         {/* Navigation */}
-        <div className="mt-3 flex flex-col space-y-1 sm:space-y-2">
+        <div className="mt-4 flex flex-col space-y-2">
           <Link href="/dashboard" passHref>
             <button
               className={`
-                flex items-center px-1 sm:px-2 py-1.5 sm:py-2 mx-2 sm:mx-4 rounded-md font-medium transition-all duration-300
-                ${currentPage === "dashboard" ? "bg-[#22C55E] text-white" : "text-green-200 hover:bg-green-600"}
+                flex items-center px-2 lg:px-3 py-2.5 lg:py-3 mx-3 lg:mx-4 rounded-lg font-medium transition-all duration-300
+                ${currentPage === "dashboard" ? "bg-[#22C55E] text-white shadow-lg" : "text-green-200 hover:bg-green-600 hover:text-white"}
               `}
               title="Dashboard"
             >
