@@ -3,7 +3,7 @@
 import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
 import StaffManagement from "@/components/StaffManagement";
 import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/Sidebar-new";
 import MobileMenu from "@/components/MobileMenu";
 
 const AdminStaffPage = () => {

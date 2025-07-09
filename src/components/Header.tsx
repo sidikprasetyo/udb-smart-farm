@@ -25,11 +25,11 @@ const Header: React.FC<HeaderProps> = ({ title, userName }) => {
   }, []);
 
   return (
-    <header className="bg-[#166534] text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 my-2 me-2 rounded-lg shadow-lg">
+    <header className="bg-[#166534] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-1 my-2 ms-2 lg:ms-4 me-2 rounded-lg shadow-lg">
       <div className="flex justify-between items-center">
         {/* Judul halaman */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold truncate pr-4">{title}</h1>
+          <h1 className="text-base sm:text-xl md:text-2xl font-semibold truncate pr-4">{title}</h1>
         </div>
 
         {/* Profil admin */}
@@ -39,8 +39,8 @@ const Header: React.FC<HeaderProps> = ({ title, userName }) => {
             className="flex items-center space-x-2 sm:space-x-3 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded-lg p-1 sm:p-2 hover:bg-green-700 transition-colors duration-200"
           >
             <span className="font-medium text-sm sm:text-base hidden xs:block max-w-[100px] sm:max-w-[150px] truncate">{userName}</span>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center ring-2 ring-white ring-opacity-30">
-              <CircleUserRound className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-7 h-7 sm:w-9 sm:h-9 bg-[#166534] bg-opacity-20 rounded-full flex items-center justify-center ring-2 ring-white ring-opacity-30">
+              <CircleUserRound className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
           </button>
 

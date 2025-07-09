@@ -1,7 +1,7 @@
 "use client";
 
 import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/Sidebar-new";
 import Header from "@/components/Header";
 import MobileMenu from "@/components/MobileMenu";
 import { useAuth } from "@/contexts/AuthContext";

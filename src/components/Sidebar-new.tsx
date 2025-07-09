@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
   }, []);
 
   return (
-    <div className="fixed top-0 left-0 z-30 bg-white shadow-lg flex flex-col h-screen border-r border-gray-200">
+    <div className="fixed top-0 left-0 z-30 bg-[#f9fafb] flex flex-col h-screen rounded-lg">
       <div className="bg-[#166534] text-white h-full rounded-lg transition-all duration-300 w-16 lg:w-20 hover:w-56 lg:hover:w-64 group flex flex-col m-2 overflow-hidden">
         {/* Logo + Brand Name */}
         <div className="flex items-center px-3 lg:px-4 py-4 lg:py-5 cursor-pointer overflow-hidden">
