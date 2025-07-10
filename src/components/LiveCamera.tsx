@@ -1,7 +1,7 @@
 import React from "react";
 
 const LiveCamera: React.FC = () => {
-  const cameraUrl = "http://192.168.171.79/";
+  const cameraUrl = "http://192.168.137.138/";
 
   return (
     <div className="w-full flex justify-center px-4 lg:px-8 xl:px-16 2xl:px-24 mb-6">

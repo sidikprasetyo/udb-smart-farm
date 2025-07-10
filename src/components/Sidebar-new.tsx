@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
           <Link href="/dashboard" passHref>
             <button
               className={`
-                flex items-center px-2 lg:px-3 py-2.5 lg:py-3 mx-3 lg:mx-4 rounded-lg font-medium transition-all duration-300
+                flex items-center px-1 sm:px-2 py-1.5 sm:py-2 mx-2 sm:mx-4 rounded-md font-medium transition-all duration-300
                 ${currentPage === "dashboard" ? "bg-[#22C55E] text-white shadow-lg" : "text-green-200 hover:bg-green-600 hover:text-white"}
               `}
               title="Dashboard"
