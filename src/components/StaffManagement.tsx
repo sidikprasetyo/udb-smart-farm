@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { firestore, auth } from "@/lib/firebaseAuth";
@@ -55,6 +55,8 @@ const StaffManagement = () => {
     confirmPassword: "",
   });
 
+  const hasInitialized = useRef(false);
+
   // Use the notifications hook
   const { notifications, addNotification, removeNotification } = useNotifications();
 
@@ -83,16 +85,18 @@ const StaffManagement = () => {
       const staffCollection = collection(firestore, "staff");
       const querySnapshot = await getDocs(staffCollection);
 
-      const staffData: Staff[] = [];
+      const staffData = [];
       querySnapshot.forEach((doc) => {
         staffData.push({
           id: doc.id,
-          ...(doc.data() as StaffRoleData),
+          ...(doc.data()),
         });
       });
 
       setStaffList(staffData);
-      if (staffData.length > 0) {
+      
+      // Only show notification if we actually have data AND this is not initial load
+      if (staffData.length > 0 && hasInitialized.current) {
         addNotification("info", "Data Loaded", `Loaded ${staffData.length} staff records`);
       }
     } catch (error) {
@@ -101,6 +105,13 @@ const StaffManagement = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      loadStaffData();
+    }
+  }, []);
 
   // Setup initial staff data
   const handleSetupInitialData = async () => {
@@ -114,11 +125,6 @@ const StaffManagement = () => {
     }
     setLoading(false);
   };
-
-  // Load data on component mount
-  useEffect(() => {
-    loadStaffData();
-  }, []);
 
   // Create new staff
   const handleCreateStaff = async () => {

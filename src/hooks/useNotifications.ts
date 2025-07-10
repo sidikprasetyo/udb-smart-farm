@@ -5,7 +5,9 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
 
   const addNotification = useCallback((type: NotificationData["type"], title: string, message: string, duration: number = 5000) => {
-    const id = Date.now().toString();
+    // Generate truly unique ID using timestamp + random string
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     const notification: NotificationData = {
       id,
       type,

@@ -100,13 +100,13 @@ const SensorDetailPage = () => {
           <Sidebar currentPage="dashboard" />
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0 lg:ml-20 transition-all duration-300">
           <Header title="Dashboard" userName="Admin" />
 
           <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 2xl:p-12 bg-gray-50 min-h-screen">
             {/* Grafik sensor */}
             <div className="mb-4 md:mb-6 lg:mb-8">
-              <div className="w-full max-w-full overflow-hidden">
+              <div className="w-full flex justify-center">
                 <SensorGraph title={labelNames[sensorId as string] || (sensorId as string)} />
               </div>
             </div>

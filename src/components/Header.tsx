@@ -25,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({ title, userName }) => {
   }, []);
 
   return (
-    <header className="bg-[#166534] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-1 my-2 ms-2 lg:ms-4 me-2 rounded-lg shadow-lg">
+    <header className="bg-[#166534] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-1 my-2 ms-2 lg:ms-4 me-2 rounded-lg ">
       <div className="flex justify-between items-center">
         {/* Judul halaman */}
         <div className="flex-1 min-w-0">
