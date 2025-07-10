@@ -150,7 +150,7 @@ const Home: React.FC = () => {
     kecepatan_angin: "Wind Speed",
     kelembaban: "Air Humidity",
     kelembaban_tanah: "Soil Moisture",
-    ph_tanah: "Soil pH",
+    ph_tanah: "Soil PH",
     radiasi: "Radiation",
     suhu: "Soil Temperature",
   };

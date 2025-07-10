@@ -45,6 +45,39 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
   // Ambil warna berdasarkan sensorId, fallback ke biru
   const strokeColor = colorMap[sensorId] || "#3b82f6";
 
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: any;
+    label?: string;
+  }) => {
+    if (active && payload && payload.length) {
+      const date = new Date(label || "");
+      const tanggal = date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      const waktu = date.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return (
+        <div className="bg-white p-2 border rounded shadow text-sm text-gray-800">
+          <p><strong>Tanggal</strong> : {tanggal}</p>
+          <p><strong>Waktu</strong> : {waktu}</p>
+          <p><strong>Value</strong> : {payload[0].value}</p>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-4xl mx-auto">
       <h2 className="text-xl font-bold text-center text-gray-800 mb-4 capitalize">{title}</h2>
@@ -62,11 +95,7 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
             <YAxis 
               fontSize={10}
             />
-            <Tooltip
-              labelFormatter={(value) =>
-                `Jam: ${formatTimeOnly(value.toString())}`
-              }
-            />
+             <Tooltip content={<CustomTooltip />} />
             <Line
               type="monotone"
               dataKey="value"

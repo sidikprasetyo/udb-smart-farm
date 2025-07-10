@@ -33,7 +33,7 @@ import { JSX } from "react";
 // ✅ Mapping label
 const labelNames: { [key: string]: string } = {
   kelembaban_tanah: "Soil Moisture",
-  ph_tanah: "Soil pH",
+  ph_tanah: "Soil PH",
   curah_hujan: "Rainfall",
   kecepatan_angin: "Wind Speed",
   suhu: "Soil Temperature",
