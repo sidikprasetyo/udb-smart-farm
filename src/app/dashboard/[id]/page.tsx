@@ -152,9 +152,13 @@ const SensorDetailPage = () => {
             <div className="mb-4 md:mb-6 lg:mb-8">
               <div className="w-full flex justify-center">
                 <SensorGraph
-                  title={labelNames[sensorId as string] || (sensorId as string)}
-                  data={graphData}
-                />
+                    title={labelNames[sensorId as string] || sensorId}
+                    data={allData.map((item) => ({
+                      timestamp: item.timestamp,
+                      value: parseFloat(item.value),
+                    }))}
+                    sensorId={sensorId as string}
+                  />
               </div>
             </div>
 
