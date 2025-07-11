@@ -1,7 +1,7 @@
 import React from "react";
 
 const LiveCamera: React.FC = () => {
-  const cameraUrl = "http://192.168.137.138/";
+  const cameraUrl = "http://192.168.152.79:81/stream";
 
   return (
     <div className="w-full flex justify-center px-4 lg:px-8 xl:px-16 2xl:px-24 mb-6">
@@ -12,9 +12,13 @@ const LiveCamera: React.FC = () => {
           <span className="text-gray-800 font-semibold text-lg sm:text-xl lg:text-2xl">Live Camera</span>
         </div>
 
-        {/* Live Camera Iframe */}
-        <div className="border border-gray-300 rounded-lg overflow-hidden bg-black aspect-video">
-          <iframe src={cameraUrl} className="w-full h-full border-none" title="Live Camera" allow="camera; microphone"></iframe>
+        {/* Live Camera */}
+        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-300 bg-black">
+          <img
+            src={cameraUrl}
+            alt="Live Camera"
+            className="absolute top-0 left-0 w-full h-full object-cover"
+          />
         </div>
       </div>
     </div>
