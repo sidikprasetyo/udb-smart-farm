@@ -20,6 +20,7 @@ import {
 } from "react-icons/wi";
 import { MdOpacity, MdDeviceThermostat } from "react-icons/md";
 import { SlChemistry } from "react-icons/sl";
+import { GiChemicalTank , GiChemicalDrop, GiMinerals } from "react-icons/gi";
 
 const Home: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData>({
@@ -104,6 +105,33 @@ const Home: React.FC = () => {
       progress: 0,
       color: "",
     },
+    natrium: {
+      id: "natrium",
+      name: "Natrium",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    fosfor: {
+      id: "fosfor",
+      name: "Phosphorus",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
+    kalium: {
+      id: "kalium",
+      name: "Kalium",
+      value: "Loading...",
+      status: "normal",
+      icon: "",
+      progress: 0,
+      color: "",
+    },
     timestamp: "",
   });
 
@@ -117,6 +145,9 @@ const Home: React.FC = () => {
     ph_tanah: "bg-purple-500",
     radiasi: "bg-yellow-500",
     suhu: "bg-red-500",
+    natrium: "bg-blue-500",
+    fosfor: "bg-purple-500",
+    kalium: "bg-yellow-600",
   };
 
   const defaultIcons: { [key in keyof Omit<DashboardData, "timestamp">]: JSX.Element } = {
@@ -129,6 +160,9 @@ const Home: React.FC = () => {
     ph_tanah: <SlChemistry className="w-7 h-7 text-purple-500" />,
     radiasi: <WiSolarEclipse className="w-7 h-7 text-yellow-500" />,
     suhu: <WiThermometer className="w-7 h-7 text-red-500" />,
+    natrium: <GiChemicalTank className="w-7 h-7 text-blue-500" />,
+    fosfor: <GiChemicalDrop className="w-7 h-7 text-purple-500" />,
+    kalium: <GiMinerals className="w-7 h-7 text-yellow-600" />,
   };
 
   const units: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
@@ -141,6 +175,9 @@ const Home: React.FC = () => {
     ph_tanah: "",
     radiasi: "W/m²",
     suhu: "°C",
+    natrium: "mg/kg (mg/L)",
+    fosfor: "mg/kg (mg/L)",
+    kalium: "mg/kg (mg/L)",
   };
 
   const labelNames: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
@@ -153,6 +190,9 @@ const Home: React.FC = () => {
     ph_tanah: "Soil PH",
     radiasi: "Radiation",
     suhu: "Soil Temperature",
+    natrium: "Natrium",
+    fosfor: "Phosphorus",
+    kalium: "Kalium",
   };
 
   const calculateStatus = (key: keyof Omit<DashboardData, "timestamp">, value: number): SensorData["status"] => {
@@ -173,6 +213,12 @@ const Home: React.FC = () => {
         return value > 20 ? "high" : "normal";
       case "curah_hujan":
         return value > 10 ? "high" : value > 5 ? "medium" : "low";
+      case "natrium":
+        return value > 100 ? "high" : "normal";
+      case "fosfor":
+        return value > 100 ? "high" : "normal";
+      case "kalium":
+        return value > 100 ? "high" : "normal";
       default:
         return "normal";
     }
@@ -215,6 +261,9 @@ const Home: React.FC = () => {
     loadSensorData("ph_tanah", "ph_tanah");
     loadSensorData("radiasi", "radiasi");
     loadSensorData("suhu", "suhu");
+    loadSensorData("natrium", "natrium");
+    loadSensorData("phosphorus", "fosfor");
+    loadSensorData("kalium", "kalium");
   }, []);
 
   return (

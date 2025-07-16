@@ -19,5 +19,8 @@ export interface DashboardData {
   ph_tanah: SensorData;
   radiasi: SensorData;
   suhu: SensorData;
+  natrium: SensorData;
+  fosfor: SensorData;
+  kalium: SensorData;
   timestamp: string;
 }

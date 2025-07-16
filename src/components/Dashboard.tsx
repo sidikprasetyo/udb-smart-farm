@@ -25,6 +25,9 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         <SensorCard sensor={data.suhu} />
         <SensorCard sensor={data.dht_humidity} />
         <SensorCard sensor={data.dht_temperature} />
+        <SensorCard sensor={data.natrium} />
+        <SensorCard sensor={data.fosfor} />
+        <SensorCard sensor={data.kalium} />
       </div>
     </div>
   );

@@ -8,7 +8,6 @@ import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
 import MobileMenu from "@/components/MobileMenu";
 import SensorGraph from "@/components/Sensor/SensorGraph";
 import SensorHistory from "@/components/Sensor/SensorHistory";
-import SensorPagination from "@/components/Sensor/SensorPagination";
 
 import { firestore } from "@/lib/firebaseConfig";
 import {
@@ -27,6 +26,7 @@ import {
   WiThermometer,
 } from "react-icons/wi";
 import { MdOpacity, MdDeviceThermostat } from "react-icons/md";
+import { GiChemicalTank , GiChemicalDrop, GiMinerals } from "react-icons/gi";
 import { SlChemistry } from "react-icons/sl";
 import { JSX } from "react";
 
@@ -41,6 +41,9 @@ const labelNames: { [key: string]: string } = {
   dht_humidity: "DHT Humidity",
   kelembaban: "Air Humidity",
   radiasi: "Radiation",
+  natrium: "Natrium",
+  fosfor: "Phosporus",
+  kalium: "Kalium",
 };
 
 // ✅ Mapping ikon
@@ -54,6 +57,9 @@ const iconMap: { [key: string]: JSX.Element } = {
   dht_humidity: <WiHumidity className="w-5 h-5 text-cyan-500" />,
   kelembaban: <WiHumidity className="w-5 h-5 text-green-400" />,
   radiasi: <WiSolarEclipse className="w-5 h-5 text-yellow-500" />,
+  natrium: <GiChemicalTank className="w-7 h-7 text-blue-500" />,
+  fosfor: <GiChemicalDrop className="w-7 h-7 text-purple-500" />,
+  kalium: <GiMinerals className="w-7 h-7 text-yellow-600" />,
 };
 
 // ✅ Mapping warna (Tailwind)
@@ -67,15 +73,20 @@ const colorMap: { [key: string]: string } = {
   dht_humidity: "bg-cyan-500",
   kelembaban: "bg-green-400",
   radiasi: "bg-yellow-500",
+  natrium: "bg-blue-500",
+  fosfor: "bg-purple-500",
+  kalium: "bg-yellow-600",
 };
 
 const SensorDetailPage = () => {
   const { id: sensorId } = useParams();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, ] = useState(1);
   const [recordsPerPage] = useState(8);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [historyData, setHistoryData] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [allData, setAllData] = useState<any[]>([]);
-  const [graphData, setGraphData] = useState<{ timestamp: string; value: number }[]>([]);
+  const [, setGraphData] = useState<{ timestamp: string; value: number }[]>([]);
 
   useEffect(() => {
     const fetchSensorData = async () => {
@@ -152,7 +163,7 @@ const SensorDetailPage = () => {
             <div className="mb-4 md:mb-6 lg:mb-8">
               <div className="w-full flex justify-center">
                 <SensorGraph
-                    title={labelNames[sensorId as string] || sensorId}
+                    title={labelNames[sensorId as string] || sensorId as string}
                     data={allData.map((item) => ({
                       timestamp: item.timestamp,
                       value: parseFloat(item.value),
@@ -165,15 +176,7 @@ const SensorDetailPage = () => {
             {/* History & Pagination */}
             <div className="space-y-4 md:space-y-6">
               <div className="w-full overflow-x-auto">
-                <SensorHistory data={historyData} />
-              </div>
-
-              <div className="flex justify-center">
-                <SensorPagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(allData.length / recordsPerPage)}
-                  onPageChange={setCurrentPage}
-                />
+                <SensorHistory data={historyData} allData={allData} />
               </div>
             </div>
           </div>
