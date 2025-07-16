@@ -95,19 +95,19 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
   return (
     <div>
       {/* Filter + Export bar */}
-      <div className="bg-white w-[20vw] shadow-md rounded-xl p-4 mb-4 flex flex-col justify-center md:flex-row items-start md:items-center gap-4">
+      <div className="bg-white w-full md:w-[40vw] lg:w-[20vw] shadow-md rounded-xl p-4 mb-4 flex flex-col md:flex-row items-start md:items-center gap-4">
         {/* Filter Dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative w-full md:w-48" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center border border-gray-300 px-4 py-2 w-[10vw] justify-between rounded-md bg-white shadow-sm hover:bg-gray-100 text-sm text-gray-700"
+            className="flex items-center justify-between border border-gray-300 px-4 py-2 w-full rounded-md bg-white shadow-sm hover:bg-gray-100 text-sm text-gray-700"
           >
             {getFilterLabel(filterOption)}
             <ChevronDown className="ml-2 w-4 h-4" />
           </button>
 
           {dropdownOpen && (
-            <div className="absolute z-10 mt-2 w-40 bg-white border border-gray-200 rounded shadow">
+            <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded shadow">
               {["all", "6h", "12h", "24h"].map((opt) => (
                 <button
                   key={opt}
@@ -128,7 +128,7 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
         {/* Export Button */}
         <button
           onClick={exportAllToExcel}
-          className="flex items-center bg-[#166534] hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-semibold shadow"
+          className="w-full md:w-auto flex items-center justify-center bg-[#166534] hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-semibold shadow"
         >
           <RiFileExcel2Fill className="w-4 h-4 mr-2" />
           Export
