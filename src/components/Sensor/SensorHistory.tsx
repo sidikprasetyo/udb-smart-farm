@@ -161,7 +161,20 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
                   </div>
                   <div className="text-sm text-gray-500 flex flex-col">
                     <span className="text-green-600 font-medium">{item.status}</span>
-                    <span>At {item.timestamp}</span>
+                    <span>
+                      📅{" "}
+                      {new Date(item.timestamp).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "2-digit",
+                        year: "numeric",
+                      })}{" "}
+                      | 🕒{" "}
+                      {new Date(item.timestamp).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>

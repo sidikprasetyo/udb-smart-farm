@@ -20,6 +20,9 @@ const colorMap: { [key: string]: string } = {
   dht_humidity: "#06b6d4",        // bg-cyan-500
   kelembaban: "#4ade80",          // bg-green-400
   radiasi: "#facc15",             // bg-yellow-500
+  natrium: "#3b82f6",             // bg-blue-500
+  fosfor: "#8b5cf6",              // bg-purple-500
+  kalium: "#f59e0b",              // bg-yellow-600
 };
 
 interface SensorGraphProps {
@@ -51,6 +54,7 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
     label,
   }: {
     active?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload?: any;
     label?: string;
   }) => {
