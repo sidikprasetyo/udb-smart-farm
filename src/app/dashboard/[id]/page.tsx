@@ -145,7 +145,7 @@ const SensorDetailPage = () => {
     const startIndex = (currentPage - 1) * recordsPerPage;
     const endIndex = startIndex + recordsPerPage;
     setHistoryData(allData.slice(startIndex, endIndex));
-  }, [currentPage, allData]);
+  }, [currentPage, allData, recordsPerPage]);
 
   return (
     <MultiRoleProtectedRoute allowedRoles={["user", "operator", "petani", "manager"]}>

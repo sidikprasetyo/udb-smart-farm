@@ -85,12 +85,12 @@ const StaffManagement = () => {
       const staffCollection = collection(firestore, "staff");
       const querySnapshot = await getDocs(staffCollection);
 
-      const staffData = [];
+      const staffData: Staff[] = [];
       querySnapshot.forEach((doc) => {
         staffData.push({
           id: doc.id,
           ...(doc.data()),
-        });
+        } as Staff);
       });
 
       setStaffList(staffData);
