@@ -59,7 +59,7 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     else if (filterOption === "12h") threshold -= 12 * 60 * 60 * 1000;
     else if (filterOption === "24h") threshold -= 24 * 60 * 60 * 1000;
 
-    return allData.filter((item) => new Date(item.timestamp).getTime() >= threshold);
+    return allData.filter((item) => new Date(item.waktu).getTime() >= threshold);
   }, [allData, filterOption]);
 
   const paginatedData = useMemo(() => {
