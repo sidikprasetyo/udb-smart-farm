@@ -110,9 +110,9 @@ const Home: React.FC = () => {
       progress: 0,
       color: "",
     },
-    natrium: {
-      id: "natrium",
-      name: "Natrium",
+    nitrogen: {
+      id: "nitrogen",
+      name: "Nitrogen",
       value: "Loading...",
       status: "normal",
       icon: "",
@@ -150,7 +150,7 @@ const Home: React.FC = () => {
     ph_tanah: "bg-purple-500",
     radiasi: "bg-yellow-500",
     suhu: "bg-red-500",
-    natrium: "bg-blue-500",
+    nitrogen: "bg-blue-500",
     fosfor: "bg-purple-500",
     kalium: "bg-yellow-600",
   };
@@ -165,7 +165,7 @@ const Home: React.FC = () => {
     ph_tanah: <SlChemistry className="w-7 h-7 text-purple-500" />,
     radiasi: <WiSolarEclipse className="w-7 h-7 text-yellow-500" />,
     suhu: <WiThermometer className="w-7 h-7 text-red-500" />,
-    natrium: <GiChemicalTank className="w-7 h-7 text-blue-500" />,
+    nitrogen: <GiChemicalTank className="w-7 h-7 text-blue-500" />,
     fosfor: <GiChemicalDrop className="w-7 h-7 text-purple-500" />,
     kalium: <GiMinerals className="w-7 h-7 text-yellow-600" />,
   };
@@ -180,7 +180,7 @@ const Home: React.FC = () => {
     ph_tanah: "",
     radiasi: "W/m²",
     suhu: "°C",
-    natrium: "mg/kg (mg/L)",
+    nitrogen: "mg/kg (mg/L)",
     fosfor: "mg/kg (mg/L)",
     kalium: "mg/kg (mg/L)",
   };
@@ -195,7 +195,7 @@ const Home: React.FC = () => {
     ph_tanah: "Soil PH",
     radiasi: "Radiation",
     suhu: "Soil Temperature",
-    natrium: "Natrium",
+    nitrogen: "Nitrogen",
     fosfor: "Phosphorus",
     kalium: "Kalium",
   };
@@ -243,7 +243,7 @@ const Home: React.FC = () => {
         return value > 20 ? "high" : "normal";
       case "curah_hujan":
         return value > 10 ? "high" : value > 5 ? "medium" : "low";
-      case "natrium":
+      case "nitrogen":
         return value > 100 ? "high" : "normal";
       case "fosfor":
         return value > 100 ? "high" : "normal";
@@ -291,7 +291,7 @@ const Home: React.FC = () => {
     loadSensorData("ph_tanah", "ph_tanah");
     loadSensorData("radiasi", "radiasi");
     loadSensorData("suhu", "suhu");
-    loadSensorData("natrium", "natrium");
+    loadSensorData("nitrogen", "nitrogen");
     loadSensorData("phosphorus", "fosfor");
     loadSensorData("kalium", "kalium");
   }, []);
