@@ -23,6 +23,7 @@ import {
 import { MdOpacity, MdDeviceThermostat } from "react-icons/md";
 import { SlChemistry } from "react-icons/sl";
 import { GiChemicalTank , GiChemicalDrop, GiMinerals } from "react-icons/gi";
+import { FcElectricalSensor } from "react-icons/fc";
 
 const Home: React.FC = () => {
   const [user, loading] = useAuthState(auth);
@@ -38,18 +39,18 @@ const Home: React.FC = () => {
       progress: 0,
       color: "",
     },
-    dht_humidity: {
-      id: "dht_humidity",
-      name: "DHT Humidity",
+    kelembaban_udara: {
+      id: "kelembaban_udara",
+      name: "Air Humidity",
       value: "Loading...",
       status: "normal",
       icon: "",
       progress: 0,
       color: "",
     },
-    dht_temperature: {
-      id: "dht_temperature",
-      name: "DHT Temperature",
+    suhu_udara: {
+      id: "suhu_udara",
+      name: "Air Temperature",
       value: "Loading...",
       status: "normal",
       icon: "",
@@ -65,9 +66,9 @@ const Home: React.FC = () => {
       progress: 0,
       color: "",
     },
-    kelembaban: {
-      id: "kelembaban",
-      name: "Air Humidity",
+    ec_tanah: {
+      id: "ec_tanah",
+      name: "EC Soil",
       value: "Loading...",
       status: "normal",
       icon: "",
@@ -101,8 +102,8 @@ const Home: React.FC = () => {
       progress: 0,
       color: "",
     },
-    suhu: {
-      id: "suhu",
+    suhu_tanah: {
+      id: "suhu_tanah",
       name: "Soil Temperature",
       value: "Loading...",
       status: "normal",
@@ -119,8 +120,8 @@ const Home: React.FC = () => {
       progress: 0,
       color: "",
     },
-    fosfor: {
-      id: "fosfor",
+    phosphorus: {
+      id: "phosphorus",
       name: "Phosphorus",
       value: "Loading...",
       status: "normal",
@@ -130,74 +131,74 @@ const Home: React.FC = () => {
     },
     kalium: {
       id: "kalium",
-      name: "Kalium",
+      name: "Potassium",
       value: "Loading...",
       status: "normal",
       icon: "",
       progress: 0,
       color: "",
     },
-    timestamp: "",
+    waktu: "",
   });
 
   const defaultColors: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
     curah_hujan: "bg-blue-600",
-    dht_humidity: "bg-cyan-500",
-    dht_temperature: "bg-orange-500",
+    kelembaban_udara: "bg-cyan-500",
+    suhu_udara: "bg-orange-500",
     kecepatan_angin: "bg-blue-400",
-    kelembaban: "bg-green-400",
+    ec_tanah: "bg-cyan-400",
     kelembaban_tanah: "bg-green-600",
     ph_tanah: "bg-purple-500",
     radiasi: "bg-yellow-500",
-    suhu: "bg-red-500",
+    suhu_tanah: "bg-red-500",
     nitrogen: "bg-blue-500",
-    fosfor: "bg-purple-500",
+    phosphorus: "bg-purple-500",
     kalium: "bg-yellow-600",
   };
 
   const defaultIcons: { [key in keyof Omit<DashboardData, "timestamp">]: JSX.Element } = {
     curah_hujan: <WiRaindrops className="w-7 h-7 text-blue-600" />,
-    dht_humidity: <WiHumidity className="w-7 h-7 text-cyan-500" />,
-    dht_temperature: <MdDeviceThermostat className="w-7 h-7 text-orange-500" />,
+    kelembaban_udara: <WiHumidity className="w-7 h-7 text-cyan-500" />,
+    suhu_udara: <MdDeviceThermostat className="w-7 h-7 text-orange-500" />,
     kecepatan_angin: <WiStrongWind className="w-7 h-7 text-blue-400" />,
-    kelembaban: <WiHumidity className="w-7 h-7 text-green-400" />,
+    ec_tanah: <FcElectricalSensor className="w-7 h-7 text-green-400" />,
     kelembaban_tanah: <MdOpacity className="w-7 h-7 text-green-600" />,
     ph_tanah: <SlChemistry className="w-7 h-7 text-purple-500" />,
     radiasi: <WiSolarEclipse className="w-7 h-7 text-yellow-500" />,
-    suhu: <WiThermometer className="w-7 h-7 text-red-500" />,
+    suhu_tanah: <WiThermometer className="w-7 h-7 text-red-500" />,
     nitrogen: <GiChemicalTank className="w-7 h-7 text-blue-500" />,
-    fosfor: <GiChemicalDrop className="w-7 h-7 text-purple-500" />,
+    phosphorus: <GiChemicalDrop className="w-7 h-7 text-purple-500" />,
     kalium: <GiMinerals className="w-7 h-7 text-yellow-600" />,
   };
 
   const units: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
-    curah_hujan: "mm",
-    dht_humidity: "%",
-    dht_temperature: "°C",
-    kecepatan_angin: "m/s",
-    kelembaban: "%",
-    kelembaban_tanah: "%",
+    curah_hujan: " mm",
+    kelembaban_udara: " %RH",
+    suhu_udara: " °C",
+    kecepatan_angin: " m/s",
+    ec_tanah: " dS/m",
+    kelembaban_tanah: " %",
     ph_tanah: "",
-    radiasi: "W/m²",
-    suhu: "°C",
-    nitrogen: "mg/kg (mg/L)",
-    fosfor: "mg/kg (mg/L)",
-    kalium: "mg/kg (mg/L)",
+    radiasi: " W/m²",
+    suhu_tanah: " °C",
+    nitrogen: " mg/kg",
+    phosphorus: " mg/kg",
+    kalium: " mg/kg",
   };
 
   const labelNames: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
     curah_hujan: "Rainfall",
-    dht_humidity: "DHT Humidity",
-    dht_temperature: "DHT Temperature",
+    kelembaban_udara: "Air Humidity",
+    suhu_udara: "Air Temperature",
     kecepatan_angin: "Wind Speed",
-    kelembaban: "Air Humidity",
+    ec_tanah: "EC Soil",
     kelembaban_tanah: "Soil Moisture",
     ph_tanah: "Soil PH",
     radiasi: "Radiation",
-    suhu: "Soil Temperature",
+    suhu_tanah: "Soil Temperature",
     nitrogen: "Nitrogen",
-    fosfor: "Phosphorus",
-    kalium: "Kalium",
+    phosphorus: "Phosphorus",
+    kalium: "Potassium",
   };
 
   // ✅ Fetch username berdasarkan user yang login
@@ -228,27 +229,29 @@ const Home: React.FC = () => {
   const calculateStatus = (key: keyof Omit<DashboardData, "timestamp">, value: number): SensorData["status"] => {
     switch (key) {
       case "kelembaban_tanah":
-      case "kelembaban":
-        return value >= 60 ? "optimal" : value >= 40 ? "normal" : "low";
+        return value > 50 ? "very wet" : value > 35 ? "wet" : value > 20 ? "moist" : value > 0 ? "dry" : "very dry";
+      case "ec_tanah":
+        return value > 8 ? "very high" : value > 4 ? "high" : value > 2.5 ? "slightly high" : value > 1 ? "moderate" : value > 0.5 ? "low" : "very low";
       case "ph_tanah":
-        return value >= 6 && value <= 7.5 ? "normal" : "high";
+        return value > 8 ? "strongly alkaline" : value > 7.4 ? "moderately alkaline" : value > 6.6 ? "neutral" : value > 5.5 ? "moderate acidic" : "strongly acidic";
       case "radiasi":
-        return value > 5 ? "high" : "normal";
-      case "suhu":
-      case "dht_temperature":
-        return value > 30 ? "high" : value >= 20 ? "normal" : "low";
-      case "dht_humidity":
-        return value >= 60 ? "normal" : "low";
+        return value > 900 ? "very high" : value > 601 ? "high" : value > 301 ? "moderate" : value > 100 ? "low" : "very low";
+      case "suhu_tanah":
+        return value > 35 ? "very high" : value > 26 ? "high" : value > 16 ? "moderate" : value > 10 ? "low" : "very low";
+      case "suhu_udara":
+        return value > 35 ? "very high" : value > 31 ? "high" : value > 21 ? "moderate" : value > 10 ? "low" : "very low";
+      case "kelembaban_udara":
+        return value > 80 ? "very humid" : value > 61 ? "humid" : value > 41 ? "comfortable" : value > 31 ? "dry" : "very dry";
       case "kecepatan_angin":
-        return value > 20 ? "high" : "normal";
+        return value > 15 ? "very strong" : value > 10 ? "strong" : value > 5 ? "moderate" : value > 1.6 ? "weak" : "very weak";
       case "curah_hujan":
-        return value > 10 ? "high" : value > 5 ? "medium" : "low";
+        return value > 100 ? "very heavy rain" : value > 50 ? "heavy rain" : value > 20 ? "moderate rain" : value > 5 ? "light rain" : value > 0.1 ? "drizzle" : "no rain";
       case "nitrogen":
-        return value > 100 ? "high" : "normal";
-      case "fosfor":
-        return value > 100 ? "high" : "normal";
+        return value > 60 ? "very high" : value > 41 ? "high" : value > 21 ? "moderate" : value > 10 ? "low" : "very low";
+      case "phosphorus":
+        return value > 50 ? "very high" : value > 31 ? "high" : value > 16 ? "medium" : value > 5 ? "low" : "very low";
       case "kalium":
-        return value > 100 ? "high" : "normal";
+        return value > 250 ? "very high" : value > 150 ? "high" : value > 100 ? "moderate" : value > 50 ? "low" : "very low";
       default:
         return "normal";
     }
@@ -275,7 +278,7 @@ const Home: React.FC = () => {
             progress,
             color: defaultColors[key],
           },
-          timestamp: new Date().toISOString(),
+          waktu: new Date().toISOString(),
         }));
       }
     });
@@ -283,26 +286,21 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     loadSensorData("curah_hujan", "curah_hujan");
-    loadSensorData("dht_humidity", "dht_humidity");
-    loadSensorData("dht_temperature", "dht_temperature");
+    loadSensorData("kelembaban_udara", "kelembaban_udara");
+    loadSensorData("suhu_udara", "suhu_udara");
     loadSensorData("kecepatan_angin", "kecepatan_angin");
-    loadSensorData("kelembaban", "kelembaban");
+    loadSensorData("ec_tanah", "ec_tanah");
     loadSensorData("kelembaban_tanah", "kelembaban_tanah");
     loadSensorData("ph_tanah", "ph_tanah");
     loadSensorData("radiasi", "radiasi");
-    loadSensorData("suhu", "suhu");
+    loadSensorData("suhu_tanah", "suhu_tanah");
     loadSensorData("nitrogen", "nitrogen");
-    loadSensorData("phosphorus", "fosfor");
+    loadSensorData("phosphorus", "phosphorus");
     loadSensorData("kalium", "kalium");
   }, []);
 
   return (
     <MultiRoleProtectedRoute allowedRoles={["operator", "petani"]}>
-      <Head>
-        <title>Smart Farm Dashboard</title>
-        <meta name="description" content="IoT Smart Farm Monitoring Dashboard" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
 
       <div className="flex min-h-screen bg-gray-50">
         <MobileMenu currentPage="dashboard" />

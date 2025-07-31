@@ -15,35 +15,73 @@ const colorMap: { [key: string]: string } = {
   ph_tanah: "#9333ea",            // bg-purple-500
   curah_hujan: "#2563eb",         // bg-blue-600
   kecepatan_angin: "#60a5fa",     // bg-blue-400
-  suhu: "#ef4444",                // bg-red-500
-  dht_temperature: "#f97316",     // bg-orange-500
-  dht_humidity: "#06b6d4",        // bg-cyan-500
-  kelembaban: "#4ade80",          // bg-green-400
+  suhu_tanah: "#ef4444",          // bg-red-500
+  suhu_udara: "#f97316",          // bg-orange-500
+  kelembaban_udara: "#06b6d4",    // bg-cyan-500
   radiasi: "#facc15",             // bg-yellow-500
-  natrium: "#3b82f6",             // bg-blue-500
-  fosfor: "#8b5cf6",              // bg-purple-500
+  nitrogen: "#3b82f6",            // bg-blue-500
+  phosphorus: "#8b5cf6",          // bg-purple-500
   kalium: "#f59e0b",              // bg-yellow-600
+  ec_tanah: "#22d3ee",            // bg-cyan-400
 };
 
 interface SensorGraphProps {
   title: string;
   data: {
-    timestamp: string;
+    waktu: string;
     value: number;
   }[];
   sensorId: string;
 }
 
 const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
-  // Format waktu menjadi HH:mm
-  const formatTimeOnly = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+  // ✅ Perbaikan: Format waktu dengan parameter yang benar
+  const formatTimeOnly = (waktuString: string) => {
+    try {
+      // Parse waktu string menjadi Date object
+      const date = new Date(waktuString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.error("Invalid date:", waktuString);
+        return "Invalid";
+      }
+      
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (error) {
+      console.error("Error formatting time:", error, waktuString);
+      return "Error";
+    }
   };
+
+  // ✅ Transform data untuk memastikan format yang konsisten
+  const transformedData = data.map((item, index) => {
+    // Parse dan format ulang waktu untuk memastikan konsistensi
+    let formattedTime = item.waktu;
+    
+    try {
+      const date = new Date(item.waktu);
+      if (!isNaN(date.getTime())) {
+        formattedTime = date.toISOString(); // Format standar untuk chart
+      }
+    } catch (error) {
+      console.error("Error parsing date:", error, item.waktu);
+    }
+    
+    return {
+      ...item,
+      waktu: formattedTime,
+      // Tambahkan index sebagai fallback untuk X-axis
+      index: index + 1
+    };
+  });
+
+  console.log("Original data:", data.slice(0, 3));
+  console.log("Transformed data:", transformedData.slice(0, 3));
 
   // Ambil warna berdasarkan sensorId, fallback ke biru
   const strokeColor = colorMap[sensorId] || "#3b82f6";
@@ -59,28 +97,60 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
     label?: string;
   }) => {
     if (active && payload && payload.length) {
-      const date = new Date(label || "");
-      const tanggal = date.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-      const waktu = date.toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      try {
+        const date = new Date(label || "");
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          return (
+            <div className="bg-white p-2 border rounded shadow text-sm text-gray-800">
+              <p><strong>Value</strong> : {payload[0].value}</p>
+            </div>
+          );
+        }
+        
+        const tanggal = date.toLocaleDateString("en-US", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+        const waktu = date.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
 
-      return (
-        <div className="bg-white p-2 border rounded shadow text-sm text-gray-800">
-          <p><strong>Tanggal</strong> : {tanggal}</p>
-          <p><strong>Waktu</strong> : {waktu}</p>
-          <p><strong>Value</strong> : {payload[0].value}</p>
-        </div>
-      );
+        return (
+          <div className="bg-white p-2 border rounded shadow text-sm text-gray-800">
+            <p><strong>Date</strong> : {tanggal}</p>
+            <p><strong>Time</strong> : {waktu}</p>
+            <p><strong>Value</strong> : {payload[0].value}</p>
+          </div>
+        );
+      } catch (error) {
+        console.error("Error in tooltip:", error);
+        return (
+          <div className="bg-white p-2 border rounded shadow text-sm text-gray-800">
+            <p><strong>Value</strong> : {payload[0].value}</p>
+          </div>
+        );
+      }
     }
 
     return null;
   };
+
+  // ✅ Jika tidak ada data atau data kosong
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-4xl mx-auto">
+        <h2 className="text-xl font-bold text-center text-gray-800 mb-4 capitalize">{title}</h2>
+        <div className="w-full h-[300px] flex items-center justify-center">
+          <p className="text-gray-500">No data available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-4xl mx-auto">
@@ -88,18 +158,21 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
 
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
+          <LineChart data={transformedData.slice(-10)}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              dataKey="timestamp"
+              dataKey="waktu" 
               tickFormatter={formatTimeOnly}
               interval="preserveStartEnd"
               fontSize={10}
+              angle={-45}
+              textAnchor="end"
+              height={60}
             />
             <YAxis 
               fontSize={10}
             />
-             <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip />} />
             <Line
               type="monotone"
               dataKey="value"

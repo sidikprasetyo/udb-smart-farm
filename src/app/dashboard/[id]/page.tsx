@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { FcElectricalSensor } from "react-icons/fc";
 
 import {
   WiHumidity,
@@ -46,31 +47,31 @@ const sensorFieldMapping: {
     label: "Rainfall",
     icon: <WiRaindrops className="w-7 h-7 text-blue-600" />,
     color: "bg-blue-600",
-    unit: "mm",
+    unit: " mm",
   },
   kecepatan_angin: {
     label: "Wind Speed",
     icon: <WiStrongWind className="w-7 h-7 text-blue-400" />,
     color: "bg-blue-400",
-    unit: "m/s",
+    unit: " m/s",
   },
   radiasi: {
     label: "Radiation",
     icon: <WiSolarEclipse className="w-7 h-7 text-yellow-500" />,
     color: "bg-yellow-500",
-    unit: "W/m²",
+    unit: " W/m²",
   },
-  suhu: {
+  suhu_tanah: {
     label: "Soil Temperature",
     icon: <WiThermometer className="w-7 h-7 text-red-500" />,
     color: "bg-red-500",
-    unit: "°C",
+    unit: " °C",
   },
   kelembaban_tanah: {
     label: "Soil Moisture",
     icon: <MdOpacity className="w-7 h-7 text-green-600" />,
     color: "bg-green-600",
-    unit: "%",
+    unit: " %",
   },
   ph_tanah: {
     label: "Soil PH",
@@ -78,41 +79,41 @@ const sensorFieldMapping: {
     color: "bg-purple-500",
     unit: "",
   },
-  dht_temperature: {
-    label: "DHT Temperature",
+  suhu_udara: {
+    label: "Air Temperature",
     icon: <MdDeviceThermostat className="w-7 h-7 text-orange-500" />,
     color: "bg-orange-500",
-    unit: "°C",
+    unit: " °C",
   },
-  dht_humidity: {
-    label: "DHT Humidity",
+  kelembaban_udara: {
+    label: "Air Humidity",
     icon: <WiHumidity className="w-7 h-7 text-cyan-500" />,
     color: "bg-cyan-500",
-    unit: "%",
+    unit: " %RH",
   },
-  kelembaban: {
-    label: "Air Humidity",
-    icon: <WiHumidity className="w-7 h-7 text-green-400" />,
-    color: "bg-green-400",
-    unit: "%",
+  ec_tanah: {
+    label: "EC Soil",
+    icon: <FcElectricalSensor className="w-7 h-7 text-green-400" />,
+    color: "bg-cyan-400",
+    unit: " dS/m",
   },
   nitrogen: {
     label: "Nitrogen",
     icon: <GiChemicalTank className="w-7 h-7 text-blue-500" />,
     color: "bg-blue-500",
-    unit: "mg/kg (mg/L)",
+    unit: " mg/kg",
   },
-  fosfor: {
+  phosphorus: {
     label: "Phosphorus",
     icon: <GiChemicalDrop className="w-7 h-7 text-purple-500" />,
     color: "bg-purple-500",
-    unit: "mg/kg (mg/L)",
+    unit: " mg/kg",
   },
   kalium: {
     label: "Kalium",
     icon: <GiMinerals className="w-7 h-7 text-yellow-600" />,
     color: "bg-yellow-600",
-    unit: "mg/kg (mg/L)",
+    unit: " mg/kg",
   },
 };
 
@@ -125,12 +126,12 @@ interface SensorData {
   status: string;
   icon: JSX.Element;
   color: string;
-  timestamp: string;
+  waktu: string;
   field: string;
 }
 
 interface GraphData {
-  timestamp: string;
+  waktu: string;
   value: number;
   field: string;
   label: string;
@@ -183,97 +184,193 @@ const SensorDetailPage = () => {
   const calculateStatus = (key: string, value: number): string => {
     switch (key) {
       case "kelembaban_tanah":
-      case "kelembaban":
-        return value >= 60 ? "optimal" : value >= 40 ? "normal" : "low";
+        return value > 50 ? "very wet" : value > 35 ? "wet" : value > 20 ? "moist" : value > 0 ? "dry" : "very dry";
+      case "ec_tanah":
+        return value > 8 ? "very high" : value > 4 ? "high" : value > 2.5 ? "slightly high" : value > 1 ? "moderate" : value > 0.5 ? "low" : "very low";
       case "ph_tanah":
-        return value >= 6 && value <= 7.5 ? "normal" : "high";
+        return value > 8 ? "strongly alkaline" : value > 7.4 ? "moderately alkaline" : value > 6.6 ? "neutral" : value > 5.5 ? "moderate acidic" : "strongly acidic";
       case "radiasi":
-        return value > 5 ? "high" : "normal";
-      case "suhu":
-      case "dht_temperature":
-        return value > 30 ? "high" : value >= 20 ? "normal" : "low";
-      case "dht_humidity":
-        return value >= 60 ? "normal" : "low";
+        return value > 900 ? "very high" : value > 601 ? "high" : value > 301 ? "moderate" : value > 100 ? "low" : "very low";
+      case "suhu_tanah":
+        return value > 35 ? "very high" : value > 26 ? "high" : value > 16 ? "moderate" : value > 10 ? "low" : "very low";
+      case "suhu_udara":
+        return value > 35 ? "very high" : value > 31 ? "high" : value > 21 ? "moderate" : value > 10 ? "low" : "very low";
+      case "kelembaban_udara":
+        return value > 80 ? "very humid" : value > 61 ? "humid" : value > 41 ? "comfortable" : value > 31 ? "dry" : "very dry";
       case "kecepatan_angin":
-        return value > 20 ? "high" : "normal";
+        return value > 15 ? "very strong" : value > 10 ? "strong" : value > 5 ? "moderate" : value > 1.6 ? "weak" : "very weak";
       case "curah_hujan":
-        return value > 10 ? "high" : value > 5 ? "medium" : "low";
+        return value > 100 ? "very heavy rain" : value > 50 ? "heavy rain" : value > 20 ? "moderate rain" : value > 5 ? "light rain" : value > 0.1 ? "drizzle" : "no rain";
       case "nitrogen":
-      case "fosfor":
+        return value > 60 ? "very high" : value > 41 ? "high" : value > 21 ? "moderate" : value > 10 ? "low" : "very low";
+      case "phosphorus":
+        return value > 50 ? "very high" : value > 31 ? "high" : value > 16 ? "medium" : value > 5 ? "low" : "very low";
       case "kalium":
-        return value > 100 ? "high" : "normal";
+        return value > 250 ? "very high" : value > 150 ? "high" : value > 100 ? "moderate" : value > 50 ? "low" : "very low";
       default:
         return "normal";
     }
   };
 
   // ✅ Fetch historical data dari Firestore
-  useEffect(() => {
-    const fetchSensorData = async () => {
-      if (!sensorId || !sensorConfig) return;
+  // ✅ Perbaikan untuk menangani nilai 0 yang dianggap falsy
+useEffect(() => {
+  const fetchSensorData = async () => {
+    if (!sensorId || !sensorConfig) return;
 
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const colRef = collection(firestore, "sensorHistory");
-        const q = query(colRef, orderBy("timestamp", "desc"));
-        const snapshot = await getDocs(q);
+    try {
+      const colRef = collection(firestore, "dataHistoryPTLM");
+      const q = query(colRef, orderBy("waktu", "desc"));
+      const snapshot = await getDocs(q);
+      
+      const fetchedData: SensorData[] = [];
+      const chartData: GraphData[] = [];
+
+      console.log(`Total documents in collection: ${snapshot.size}`);
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
         
-        const fetchedData: SensorData[] = [];
-        const chartData: GraphData[] = [];
-
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const readableTime = data.timestamp?.toDate
-            ? new Date(data.timestamp.toDate()).toLocaleString()
-            : new Date(data.timestamp).toLocaleString();
-
-          // Check if this document has data for our specific sensor
-          const dataValue = data[sensorId as string] || 
-                           (sensorId === 'fosfor' ? data['phosphorus'] : null);
-          
-          if (dataValue !== undefined && dataValue !== null) {
-            const numericValue = parseFloat(dataValue);
-            const status = calculateStatus(sensorId as string, numericValue);
-            
-            fetchedData.push({
-              id: `${doc.id}_${sensorId}`,
-              docId: doc.id,
-              name: sensorConfig.label,
-              value: `${dataValue}${sensorConfig.unit}`,
-              rawValue: numericValue || 0,
-              status: status,
-              icon: sensorConfig.icon,
-              color: sensorConfig.color,
-              timestamp: readableTime,
-              field: sensorId as string
-            });
-
-            if (!isNaN(numericValue)) {
-              chartData.push({
-                timestamp: readableTime,
-                value: numericValue,
-                field: sensorId as string,
-                label: sensorConfig.label,
-                docId: doc.id
-              });
+        console.log(`Document ${doc.id}:`, data);
+        
+        // Parse waktu
+        let readableTime = "Invalid Date";
+        
+        if (data.waktu) {
+          try {
+            if (data.waktu?.toDate && typeof data.waktu.toDate === 'function') {
+              readableTime = new Date(data.waktu.toDate()).toLocaleString();
             }
+            else if (typeof data.waktu === 'string') {
+              const [datePart, timePart] = data.waktu.split(' ');
+              const [day, month, year] = datePart.split('/');
+              const [hour, minute, second] = timePart.split(':');
+              
+              const parsedDate = new Date(
+                parseInt(year), 
+                parseInt(month) - 1,
+                parseInt(day), 
+                parseInt(hour), 
+                parseInt(minute), 
+                parseInt(second)
+              );
+              
+              if (!isNaN(parsedDate.getTime())) {
+                readableTime = parsedDate.toLocaleString();
+              }
+            }
+            else if (typeof data.waktu === 'number') {
+              readableTime = new Date(data.waktu).toLocaleString();
+            }
+            else {
+              const parsedDate = new Date(data.waktu);
+              if (!isNaN(parsedDate.getTime())) {
+                readableTime = parsedDate.toLocaleString();
+              }
+            }
+          } catch (error) {
+            console.error("Error parsing waktu:", error, data.waktu);
+            readableTime = "Invalid Date";
           }
+        }
+
+        // ✅ PERBAIKAN UTAMA: Jangan gunakan || operator untuk nilai yang bisa 0
+        let dataValue;
+        
+        if (sensorId === 'fosfor' && data.hasOwnProperty('phosphorus')) {
+          dataValue = data['phosphorus'];
+        } else if (data.hasOwnProperty(sensorId as string)) {
+          dataValue = data[sensorId as string];
+        } else {
+          console.log(`Field ${sensorId} not found in document ${doc.id}`);
+          return; // Skip jika field tidak ada
+        }
+        
+        console.log(`Sensor ${sensorId} value:`, dataValue, typeof dataValue);
+        console.log(`Direct access data['${sensorId}']:`, data[sensorId as string]);
+        
+        // ✅ Hanya skip jika benar-benar null atau undefined
+        if (dataValue === null || dataValue === undefined) {
+          console.log(`Skipping null/undefined value for ${sensorId}`);
+          return;
+        }
+
+        // Skip string kosong atau invalid strings
+        if (dataValue === "" || dataValue === "null" || dataValue === "undefined") {
+          console.log(`Skipping empty/invalid string value for ${sensorId}:`, dataValue);
+          return;
+        }
+
+        // Parse numeric value - TERMASUK nilai 0
+        let numericValue: number;
+        
+        if (typeof dataValue === 'number') {
+          numericValue = dataValue;
+        } else {
+          numericValue = parseFloat(dataValue);
+          if (isNaN(numericValue)) {
+            console.log(`Cannot parse to number for ${sensorId}:`, dataValue);
+            return;
+          }
+        }
+        
+        console.log(`✅ Processing value - Numeric:`, numericValue, `(original: ${dataValue})`);
+        
+        const status = calculateStatus(sensorId as string, numericValue);
+        
+        const sensorDataItem = {
+          id: `${doc.id}_${sensorId}`,
+          docId: doc.id,
+          name: sensorConfig.label,
+          value: `${numericValue}${sensorConfig.unit}`,
+          rawValue: numericValue,
+          status: status,
+          icon: sensorConfig.icon,
+          color: sensorConfig.color,
+          waktu: readableTime,
+          field: sensorId as string
+        };
+        
+        console.log(`✅ ADDING sensor data with value ${numericValue}:`, sensorDataItem);
+        
+        fetchedData.push(sensorDataItem);
+
+        chartData.push({
+          waktu: readableTime,
+          value: numericValue,
+          field: sensorId as string,
+          label: sensorConfig.label,
+          docId: doc.id
         });
+      });
 
-        setAllData(fetchedData);
-        setGraphData(chartData.reverse()); // urutkan dari lama ke baru
-      } catch (error) {
-        console.error("Error fetching sensor data:", error);
-        setError("Failed to fetch sensor data");
-      } finally {
-        setIsLoading(false);
+      console.log(`Final fetched data count: ${fetchedData.length}`);
+      console.log(`All fetched data:`, fetchedData);
+      
+      // ✅ Debug: Log contoh data yang akan ditampilkan
+      if (fetchedData.length > 0) {
+        console.log(`Sample data values:`, fetchedData.slice(0, 3).map(item => ({
+          docId: item.docId,
+          value: item.value,
+          rawValue: item.rawValue
+        })));
       }
-    };
+      
+      setAllData(fetchedData);
+      setGraphData(chartData.reverse());
+    } catch (error) {
+      console.error("Error fetching sensor data:", error);
+      setError("Failed to fetch sensor data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchSensorData();
-  }, [sensorId, sensorConfig]);
+  fetchSensorData();
+}, [sensorId, sensorConfig]);
 
   // ✅ Update history data untuk pagination
   useEffect(() => {
@@ -310,20 +407,16 @@ const SensorDetailPage = () => {
             {/* Historical Data Graph */}
             {allData.length > 0 && (
               <div className="mb-8">
-                <div className="bg-white rounded-xl shadow-lg p-6">
                   <SensorGraph
                     title={`${sensorConfig.label} Historical Trend`}
                     data={graphData}
                     sensorId={sensorId as string}
                   />
-                </div>
               </div>
             )}
 
             {/* History Table */}
             <div className="mb-8">
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                
                 <div className="overflow-x-auto">
                   <SensorHistory 
                     data={historyData} 
@@ -333,18 +426,6 @@ const SensorDetailPage = () => {
                     totalRecords={allData.length}
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* Back to Dashboard Button */}
-            <div className="flex justify-center">
-              <button
-                onClick={() => window.history.back()}
-                className="px-8 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center space-x-2"
-              >
-                <span>←</span>
-                <span>Back to Dashboard</span>
-              </button>
             </div>
           </div>
         </div>

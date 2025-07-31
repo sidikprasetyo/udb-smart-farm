@@ -10,7 +10,7 @@ interface HistoryItem {
   value: string;
   status: string;
   icon: JSX.Element;
-  timestamp: string;
+  waktu: string;
   color: string;
 }
 
@@ -75,12 +75,12 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
       return;
     }
 
-    const exportData = filteredData.map(({ id, name, value, status, timestamp }) => ({
+    const exportData = filteredData.map(({ id, name, value, status, waktu }) => ({
       ID: id,
       Name: name,
       Value: value,
       Status: status,
-      Timestamp: timestamp,
+      Timestamp: waktu,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -160,16 +160,16 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
                     />
                   </div>
                   <div className="text-sm text-gray-500 flex flex-col">
-                    <span className="text-green-600 font-medium">{item.status}</span>
+                    <span className="text-green-600 font-medium capitalize">{item.status}</span>
                     <span>
                       📅{" "}
-                      {new Date(item.timestamp).toLocaleDateString("en-US", {
+                      {new Date(item.waktu).toLocaleDateString("en-US", {
                         month: "short",
                         day: "2-digit",
                         year: "numeric",
                       })}{" "}
                       | 🕒{" "}
-                      {new Date(item.timestamp).toLocaleTimeString("en-US", {
+                      {new Date(item.waktu).toLocaleTimeString("en-US", {
                         hour: "2-digit",
                         minute: "2-digit",
                         hour12: true,

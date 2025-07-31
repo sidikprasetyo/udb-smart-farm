@@ -11,16 +11,16 @@ export interface SensorData {
 
 export interface DashboardData {
   curah_hujan: SensorData;
-  dht_humidity: SensorData;
-  dht_temperature: SensorData;
-  kecepatan_angin: SensorData;
-  kelembaban: SensorData;
-  kelembaban_tanah: SensorData;
-  ph_tanah: SensorData;
-  radiasi: SensorData;
-  suhu: SensorData;
-  nitrogen: SensorData;
-  fosfor: SensorData;
+  ec_tanah: SensorData;
   kalium: SensorData;
-  timestamp: string;
+  kecepatan_angin: SensorData;
+  kelembaban_tanah: SensorData;
+  kelembaban_udara: SensorData;
+  nitrogen: SensorData;
+  ph_tanah: SensorData;
+  phosphorus: SensorData;
+  radiasi: SensorData;
+  suhu_tanah: SensorData;
+  suhu_udara: SensorData;
+  waktu: string;
 }
