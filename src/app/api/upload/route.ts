@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
     const buffer = await req.arrayBuffer();
     const data = Buffer.from(buffer);
 
-    const dirPath = path.join(process.cwd(), 'public', 'images');
+    const dirPath = path.join(process.cwd(), "public", "images");
 
     // Pastikan folder ada
     if (!fs.existsSync(dirPath)) {
@@ -23,15 +23,16 @@ export async function POST(req: NextRequest) {
     fs.writeFileSync(filePath, data);
 
     // Simpan nama file terbaru ke latest.txt
-    const latestFilePath = path.join(dirPath, 'latest.txt');
+    const latestFilePath = path.join(dirPath, "latest.txt");
     fs.writeFileSync(latestFilePath, fileName);
 
     // 🔁 Batasi hanya 200 gambar terbaru
-    const files = fs.readdirSync(dirPath)
-      .filter(file => /^esp32_\d+\.jpg$/.test(file)) // hanya file esp32_*.jpg
+    const files = fs
+      .readdirSync(dirPath)
+      .filter((file) => /^esp32_\d+\.jpg$/.test(file)) // hanya file esp32_*.jpg
       .sort((a, b) => {
-        const timeA = parseInt(a.match(/\d+/)?.[0] || '0');
-        const timeB = parseInt(b.match(/\d+/)?.[0] || '0');
+        const timeA = parseInt(a.match(/\d+/)?.[0] || "0");
+        const timeB = parseInt(b.match(/\d+/)?.[0] || "0");
         return timeB - timeA; // urut terbaru ke lama
       });
 
@@ -41,9 +42,33 @@ export async function POST(req: NextRequest) {
       fs.unlinkSync(deletePath);
     }
 
-    return NextResponse.json({ message: 'Image saved successfully', fileName }, { status: 200 });
+    return NextResponse.json({ message: "Image saved successfully", fileName }, { status: 200 });
   } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ message: 'Failed to save image' }, { status: 500 });
+    console.error("Upload error:", error);
+    return NextResponse.json({ message: "Failed to save image" }, { status: 500 });
   }
 }
+
+export const uploadToServer = async (dataURL: string) => {
+  try {
+    const blob = await (await fetch(dataURL)).blob();
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": "image/jpeg", // atau image/png sesuai format
+      },
+      body: blob, // langsung kirim binary
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      console.log("Upload berhasil:", data.fileName);
+      alert("Gambar berhasil disimpan sebagai: " + data.fileName);
+    } else {
+      console.error("Upload gagal:", data.message);
+    }
+  } catch (error) {
+    console.error("Error saat upload:", error);
+  }
+};
