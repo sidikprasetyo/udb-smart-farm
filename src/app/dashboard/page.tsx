@@ -10,7 +10,9 @@ import RoleSwitcher from "@/components/RoleSwitcher";
 import MobileMenu from "@/components/MobileMenu";
 import { DashboardData, SensorData } from "@/types/dashboard";
 import { ref, onValue } from "firebase/database";
-import { database } from "@/lib/firebaseConfig";
+import { database, firestore, auth } from "@/lib/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 import {
   WiHumidity,
   WiRaindrops,
@@ -23,6 +25,9 @@ import { SlChemistry } from "react-icons/sl";
 import { GiChemicalTank , GiChemicalDrop, GiMinerals } from "react-icons/gi";
 
 const Home: React.FC = () => {
+  const [user, loading] = useAuthState(auth);
+  const [userName, setUserName] = useState<string>("Loading...");
+  
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     curah_hujan: {
       id: "curah_hujan",
@@ -195,6 +200,31 @@ const Home: React.FC = () => {
     kalium: "Kalium",
   };
 
+  // ✅ Fetch username berdasarkan user yang login
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user || loading) return;
+
+      try {
+        const userDocRef = doc(firestore, "staff", user.email || "");
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserName(userData.username || userData.email || "User");
+        } else {
+          // Jika tidak ditemukan di collection staff, gunakan email
+          setUserName(user.email?.split("@")[0] || "User");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setUserName(user.email?.split("@")[0] || "User");
+      }
+    };
+
+    fetchUserData();
+  }, [user, loading]);
+
   const calculateStatus = (key: keyof Omit<DashboardData, "timestamp">, value: number): SensorData["status"] => {
     switch (key) {
       case "kelembaban_tanah":
@@ -280,7 +310,7 @@ const Home: React.FC = () => {
           <Sidebar currentPage="dashboard" />
         </div>
         <div className="flex-1 flex flex-col min-w-0 lg:ml-20 transition-all duration-300">
-          <Header title="Dashboard" userName="Admin" />
+          <Header title="Dashboard" userName={userName} />
           <div className="px-4 sm:px-6 lg:px-8 pt-4 lg:pt-6 pb-0">
             <RoleSwitcher />
           </div>

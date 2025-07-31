@@ -9,14 +9,17 @@ import MobileMenu from "@/components/MobileMenu";
 import SensorGraph from "@/components/Sensor/SensorGraph";
 import SensorHistory from "@/components/Sensor/SensorHistory";
 
-import { firestore } from "@/lib/firebaseConfig";
+import { firestore, auth } from "@/lib/firebaseConfig";
 import {
   collection,
   query,
   orderBy,
   getDocs,
   DocumentData,
+  doc,
+  getDoc,
 } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 import {
   WiHumidity,
@@ -80,6 +83,7 @@ const colorMap: { [key: string]: string } = {
 
 const SensorDetailPage = () => {
   const { id: sensorId } = useParams();
+  const [user, loading] = useAuthState(auth);
   const [currentPage, ] = useState(1);
   const [recordsPerPage] = useState(8);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,6 +91,32 @@ const SensorDetailPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [allData, setAllData] = useState<any[]>([]);
   const [, setGraphData] = useState<{ timestamp: string; value: number }[]>([]);
+  const [userName, setUserName] = useState<string>("Loading...");
+
+  // ✅ Fetch username berdasarkan user yang login
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user || loading) return;
+
+      try {
+        const userDocRef = doc(firestore, "staff", user.email || "");
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserName(userData.username || userData.email || "User");
+        } else {
+          // Jika tidak ditemukan di collection staff, gunakan email
+          setUserName(user.email?.split("@")[0] || "User");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setUserName(user.email?.split("@")[0] || "User");
+      }
+    };
+
+    fetchUserData();
+  }, [user, loading]);
 
   useEffect(() => {
     const fetchSensorData = async () => {
@@ -145,7 +175,16 @@ const SensorDetailPage = () => {
     const startIndex = (currentPage - 1) * recordsPerPage;
     const endIndex = startIndex + recordsPerPage;
     setHistoryData(allData.slice(startIndex, endIndex));
-  }, [currentPage, allData, recordsPerPage]);
+  }, [currentPage, allData]);
+
+  // Show loading state while authenticating
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <MultiRoleProtectedRoute allowedRoles={["user", "operator", "petani", "manager"]}>
@@ -156,7 +195,7 @@ const SensorDetailPage = () => {
         </div>
 
         <div className="flex-1 flex flex-col min-w-0 lg:ml-20 transition-all duration-300">
-          <Header title="Dashboard" userName="Admin" />
+          <Header title="Dashboard" userName={userName} />
 
           <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10 2xl:p-12 bg-gray-50 min-h-screen">
             {/* Grafik sensor */}
