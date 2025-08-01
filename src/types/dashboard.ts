@@ -3,7 +3,7 @@ export interface SensorData {
   name: string;
   value: string | number;
   unit?: string;
-  status: 'optimal' | 'normal' | 'high' | 'low' | 'medium';
+  status: string;
   icon: string;
   progress: number;
   color: string;

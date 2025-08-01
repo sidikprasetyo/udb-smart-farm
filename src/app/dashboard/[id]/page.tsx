@@ -9,14 +9,12 @@ import MobileMenu from "@/components/MobileMenu";
 import SensorGraph from "@/components/Sensor/SensorGraph";
 import SensorHistory from "@/components/Sensor/SensorHistory";
 
-import { firestore, auth, database } from "@/lib/firebaseConfig";
-import { ref, onValue } from "firebase/database";
+import { firestore, auth } from "@/lib/firebaseConfig";
 import {
   collection,
   query,
   orderBy,
   getDocs,
-  DocumentData,
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -110,7 +108,7 @@ const sensorFieldMapping: {
     unit: " mg/kg",
   },
   kalium: {
-    label: "Kalium",
+    label: "Potassium",
     icon: <GiMinerals className="w-7 h-7 text-yellow-600" />,
     color: "bg-yellow-600",
     unit: " mg/kg",
@@ -142,15 +140,13 @@ const SensorDetailPage = () => {
   const { id: sensorId } = useParams();
   
   const [user, loading] = useAuthState(auth);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, ] = useState(1);
   const [recordsPerPage] = useState(10);
   const [historyData, setHistoryData] = useState<SensorData[]>([]);
   const [allData, setAllData] = useState<SensorData[]>([]);
   const [graphData, setGraphData] = useState<GraphData[]>([]);
-  const [currentValue, setCurrentValue] = useState<string>("Loading...");
-  const [currentStatus, setCurrentStatus] = useState<string>("normal");
   const [userName, setUserName] = useState<string>("Loading...");
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Get sensor configuration
@@ -184,31 +180,43 @@ const SensorDetailPage = () => {
   const calculateStatus = (key: string, value: number): string => {
     switch (key) {
       case "kelembaban_tanah":
-        return value > 50 ? "very wet" : value > 35 ? "wet" : value > 20 ? "moist" : value > 0 ? "dry" : "very dry";
-      case "ec_tanah":
-        return value > 8 ? "very high" : value > 4 ? "high" : value > 2.5 ? "slightly high" : value > 1 ? "moderate" : value > 0.5 ? "low" : "very low";
-      case "ph_tanah":
-        return value > 8 ? "strongly alkaline" : value > 7.4 ? "moderately alkaline" : value > 6.6 ? "neutral" : value > 5.5 ? "moderate acidic" : "strongly acidic";
-      case "radiasi":
-        return value > 900 ? "very high" : value > 601 ? "high" : value > 301 ? "moderate" : value > 100 ? "low" : "very low";
-      case "suhu_tanah":
-        return value > 35 ? "very high" : value > 26 ? "high" : value > 16 ? "moderate" : value > 10 ? "low" : "very low";
+        return value < 40 ? "low" : value > 70 ? "high" : "normal";
+
       case "suhu_udara":
-        return value > 35 ? "very high" : value > 31 ? "high" : value > 21 ? "moderate" : value > 10 ? "low" : "very low";
+        return value < 18 ? "low" : value > 32 ? "high" : "normal";
+
       case "kelembaban_udara":
-        return value > 80 ? "very humid" : value > 61 ? "humid" : value > 41 ? "comfortable" : value > 31 ? "dry" : "very dry";
-      case "kecepatan_angin":
-        return value > 15 ? "very strong" : value > 10 ? "strong" : value > 5 ? "moderate" : value > 1.6 ? "weak" : "very weak";
-      case "curah_hujan":
-        return value > 100 ? "very heavy rain" : value > 50 ? "heavy rain" : value > 20 ? "moderate rain" : value > 5 ? "light rain" : value > 0.1 ? "drizzle" : "no rain";
+        return value < 50 ? "low" : value > 80 ? "high" : "normal";
+
       case "nitrogen":
-        return value > 60 ? "very high" : value > 41 ? "high" : value > 21 ? "moderate" : value > 10 ? "low" : "very low";
+        return value < 75 ? "low" : value > 150 ? "high" : "normal";
+
       case "phosphorus":
-        return value > 50 ? "very high" : value > 31 ? "high" : value > 16 ? "medium" : value > 5 ? "low" : "very low";
+        return value < 15 ? "low" : value > 30 ? "high" : "normal";
+
       case "kalium":
-        return value > 250 ? "very high" : value > 150 ? "high" : value > 100 ? "moderate" : value > 50 ? "low" : "very low";
+        return value < 100 ? "low" : value > 200 ? "high" : "normal";
+
+      case "ec_tanah": // Electrical Conductivity
+        return value < 1 ? "low" : value > 4 ? "high" : "normal";
+
+      case "ph_tanah":
+        return value < 5.5 ? "low" : value > 7.5 ? "high" : "normal"; // Ideal pH cabai: 5.5 - 7.5
+
+      case "radiasi":
+        return value < 200 ? "low" : value > 900 ? "high" : "normal";
+
+      case "suhu_tanah":
+        return value < 15 ? "low" : value > 35 ? "high" : "normal"; // Ideal suhu tanah: 20-30°C
+
+      case "kecepatan_angin":
+        return value < 2 ? "low" : value > 15 ? "high" : "normal";
+
+      case "curah_hujan":
+        return value < 5 ? "low" : value > 100 ? "high" : "normal";
+
       default:
-        return "normal";
+        return "normal"; // fallback jika sensor tidak dikenal
     }
   };
 
@@ -390,8 +398,6 @@ useEffect(() => {
     );
   }
 
-  const totalPages = Math.ceil(allData.length / recordsPerPage);
-
   return (
     <MultiRoleProtectedRoute allowedRoles={["user", "operator", "petani", "manager"]}>
       <div className="flex min-h-screen bg-gray-50">
@@ -421,9 +427,6 @@ useEffect(() => {
                   <SensorHistory 
                     data={historyData} 
                     allData={allData}
-                    currentPage={currentPage}
-                    recordsPerPage={recordsPerPage}
-                    totalRecords={allData.length}
                   />
                 </div>
             </div>

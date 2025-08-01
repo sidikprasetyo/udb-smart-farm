@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, JSX } from "react";
-import Head from "next/head";
 import Sidebar from "@/components/Sidebar-new";
 import Header from "@/components/Header";
 import Dashboard from "@/components/Dashboard";
@@ -34,7 +33,7 @@ const Home: React.FC = () => {
       id: "curah_hujan",
       name: "Rainfall",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -43,7 +42,7 @@ const Home: React.FC = () => {
       id: "kelembaban_udara",
       name: "Air Humidity",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -52,7 +51,7 @@ const Home: React.FC = () => {
       id: "suhu_udara",
       name: "Air Temperature",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -61,7 +60,7 @@ const Home: React.FC = () => {
       id: "kecepatan_angin",
       name: "Wind Speed",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -70,7 +69,7 @@ const Home: React.FC = () => {
       id: "ec_tanah",
       name: "EC Soil",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -79,7 +78,7 @@ const Home: React.FC = () => {
       id: "kelembaban_tanah",
       name: "Soil Moisture",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -88,7 +87,7 @@ const Home: React.FC = () => {
       id: "ph_tanah",
       name: "Soil pH",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -97,7 +96,7 @@ const Home: React.FC = () => {
       id: "radiasi",
       name: "Radiation",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -106,7 +105,7 @@ const Home: React.FC = () => {
       id: "suhu_tanah",
       name: "Soil Temperature",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -115,7 +114,7 @@ const Home: React.FC = () => {
       id: "nitrogen",
       name: "Nitrogen",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -124,7 +123,7 @@ const Home: React.FC = () => {
       id: "phosphorus",
       name: "Phosphorus",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -133,7 +132,7 @@ const Home: React.FC = () => {
       id: "kalium",
       name: "Potassium",
       value: "Loading...",
-      status: "normal",
+      status: "",
       icon: "",
       progress: 0,
       color: "",
@@ -141,7 +140,7 @@ const Home: React.FC = () => {
     waktu: "",
   });
 
-  const defaultColors: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
+  const defaultColors: { [key in keyof Omit<DashboardData, "waktu">]: string } = {
     curah_hujan: "bg-blue-600",
     kelembaban_udara: "bg-cyan-500",
     suhu_udara: "bg-orange-500",
@@ -156,7 +155,7 @@ const Home: React.FC = () => {
     kalium: "bg-yellow-600",
   };
 
-  const defaultIcons: { [key in keyof Omit<DashboardData, "timestamp">]: JSX.Element } = {
+  const defaultIcons: { [key in keyof Omit<DashboardData, "waktu">]: JSX.Element } = {
     curah_hujan: <WiRaindrops className="w-7 h-7 text-blue-600" />,
     kelembaban_udara: <WiHumidity className="w-7 h-7 text-cyan-500" />,
     suhu_udara: <MdDeviceThermostat className="w-7 h-7 text-orange-500" />,
@@ -171,7 +170,7 @@ const Home: React.FC = () => {
     kalium: <GiMinerals className="w-7 h-7 text-yellow-600" />,
   };
 
-  const units: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
+  const units: { [key in keyof Omit<DashboardData, "waktu">]: string } = {
     curah_hujan: " mm",
     kelembaban_udara: " %RH",
     suhu_udara: " °C",
@@ -186,7 +185,7 @@ const Home: React.FC = () => {
     kalium: " mg/kg",
   };
 
-  const labelNames: { [key in keyof Omit<DashboardData, "timestamp">]: string } = {
+  const labelNames: { [key in keyof Omit<DashboardData, "waktu">]: string } = {
     curah_hujan: "Rainfall",
     kelembaban_udara: "Air Humidity",
     suhu_udara: "Air Temperature",
@@ -226,38 +225,50 @@ const Home: React.FC = () => {
     fetchUserData();
   }, [user, loading]);
 
-  const calculateStatus = (key: keyof Omit<DashboardData, "timestamp">, value: number): SensorData["status"] => {
+  const calculateStatus = (key: keyof Omit<DashboardData, "waktu">, value: number): SensorData["status"] => {
     switch (key) {
       case "kelembaban_tanah":
-        return value > 50 ? "very wet" : value > 35 ? "wet" : value > 20 ? "moist" : value > 0 ? "dry" : "very dry";
-      case "ec_tanah":
-        return value > 8 ? "very high" : value > 4 ? "high" : value > 2.5 ? "slightly high" : value > 1 ? "moderate" : value > 0.5 ? "low" : "very low";
-      case "ph_tanah":
-        return value > 8 ? "strongly alkaline" : value > 7.4 ? "moderately alkaline" : value > 6.6 ? "neutral" : value > 5.5 ? "moderate acidic" : "strongly acidic";
-      case "radiasi":
-        return value > 900 ? "very high" : value > 601 ? "high" : value > 301 ? "moderate" : value > 100 ? "low" : "very low";
-      case "suhu_tanah":
-        return value > 35 ? "very high" : value > 26 ? "high" : value > 16 ? "moderate" : value > 10 ? "low" : "very low";
+        return value < 40 ? "low" : value > 70 ? "high" : "normal";
+
       case "suhu_udara":
-        return value > 35 ? "very high" : value > 31 ? "high" : value > 21 ? "moderate" : value > 10 ? "low" : "very low";
+        return value < 18 ? "low" : value > 32 ? "high" : "normal";
+
       case "kelembaban_udara":
-        return value > 80 ? "very humid" : value > 61 ? "humid" : value > 41 ? "comfortable" : value > 31 ? "dry" : "very dry";
-      case "kecepatan_angin":
-        return value > 15 ? "very strong" : value > 10 ? "strong" : value > 5 ? "moderate" : value > 1.6 ? "weak" : "very weak";
-      case "curah_hujan":
-        return value > 100 ? "very heavy rain" : value > 50 ? "heavy rain" : value > 20 ? "moderate rain" : value > 5 ? "light rain" : value > 0.1 ? "drizzle" : "no rain";
+        return value < 50 ? "low" : value > 80 ? "high" : "normal";
+
       case "nitrogen":
-        return value > 60 ? "very high" : value > 41 ? "high" : value > 21 ? "moderate" : value > 10 ? "low" : "very low";
+        return value < 75 ? "low" : value > 150 ? "high" : "normal";
+
       case "phosphorus":
-        return value > 50 ? "very high" : value > 31 ? "high" : value > 16 ? "medium" : value > 5 ? "low" : "very low";
+        return value < 15 ? "low" : value > 30 ? "high" : "normal";
+
       case "kalium":
-        return value > 250 ? "very high" : value > 150 ? "high" : value > 100 ? "moderate" : value > 50 ? "low" : "very low";
+        return value < 100 ? "low" : value > 200 ? "high" : "normal";
+
+      case "ec_tanah": // Electrical Conductivity
+        return value < 1 ? "low" : value > 4 ? "high" : "normal";
+
+      case "ph_tanah":
+        return value < 5.5 ? "low" : value > 7.5 ? "high" : "normal"; // Ideal pH cabai: 5.5 - 7.5
+
+      case "radiasi":
+        return value < 200 ? "low" : value > 900 ? "high" : "normal";
+
+      case "suhu_tanah":
+        return value < 15 ? "low" : value > 35 ? "high" : "normal"; // Ideal suhu tanah: 20-30°C
+
+      case "kecepatan_angin":
+        return value < 2 ? "low" : value > 15 ? "high" : "normal";
+
+      case "curah_hujan":
+        return value < 5 ? "low" : value > 100 ? "high" : "normal";
+
       default:
-        return "normal";
+        return "normal"; // fallback jika sensor tidak dikenal
     }
   };
 
-  const loadSensorData = (sensorId: string, key: keyof Omit<DashboardData, "timestamp">) => {
+  const loadSensorData = (sensorId: string, key: keyof Omit<DashboardData, "waktu">) => {
     const sensorRef = ref(database, `sensor/${sensorId}`);
     onValue(sensorRef, (snapshot) => {
       const rawValue = snapshot.val() || "0";

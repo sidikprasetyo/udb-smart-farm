@@ -58,30 +58,39 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
     }
   };
 
-  // ✅ Transform data untuk memastikan format yang konsisten
-  const transformedData = data.map((item, index) => {
-    // Parse dan format ulang waktu untuk memastikan konsistensi
-    let formattedTime = item.waktu;
-    
-    try {
-      const date = new Date(item.waktu);
-      if (!isNaN(date.getTime())) {
-        formattedTime = date.toISOString(); // Format standar untuk chart
+  // ✅ Transform dan sort data berdasarkan tanggal (terbaru ke terlama)
+  const transformedData = data
+    .map((item, index) => {
+      // Parse dan format ulang waktu untuk memastikan konsistensi
+      let formattedTime = item.waktu;
+      let parsedDate = new Date(item.waktu);
+      
+      try {
+        if (!isNaN(parsedDate.getTime())) {
+          formattedTime = parsedDate.toISOString(); // Format standar untuk chart
+        } else {
+          // Jika parsing gagal, coba beberapa format alternatif
+          parsedDate = new Date();
+        }
+      } catch (error) {
+        console.error("Error parsing date:", error, item.waktu);
+        parsedDate = new Date();
       }
-    } catch (error) {
-      console.error("Error parsing date:", error, item.waktu);
-    }
-    
-    return {
-      ...item,
-      waktu: formattedTime,
-      // Tambahkan index sebagai fallback untuk X-axis
-      index: index + 1
-    };
-  });
+      
+      return {
+        ...item,
+        waktu: formattedTime,
+        parsedDate: parsedDate, // Simpan parsed date untuk sorting
+        index: index + 1
+      };
+    })
+    // ✅ Sort berdasarkan tanggal dari terbaru (descending)
+    .sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime())
+    // Ambil 10 data terbaru saja
+    .slice(0, 10)
 
   console.log("Original data:", data.slice(0, 3));
-  console.log("Transformed data:", transformedData.slice(0, 3));
+  console.log("Transformed and sorted data:", transformedData.slice(0, 3));
 
   // Ambil warna berdasarkan sensorId, fallback ke biru
   const strokeColor = colorMap[sensorId] || "#3b82f6";
@@ -158,7 +167,7 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
 
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={transformedData.slice(-10)}>
+          <LineChart data={transformedData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="waktu" 
