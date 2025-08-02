@@ -25,6 +25,12 @@ const eslintConfig = [
     },
   },
   {
+    files: ["src/app/api/predict/route.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+  {
     files: [
       "src/lib/staffMigration.ts",
       "src/contexts/AuthContext.tsx",
