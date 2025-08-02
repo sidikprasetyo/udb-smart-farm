@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
+import { uploadToServer } from "../../../lib/uploadUtils";
 import { FaCameraRotate } from "react-icons/fa6";
 
 const CameraFragment = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [image, setImage] = useState<string | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [currentDeviceIndex, setCurrentDeviceIndex] = useState(0);
   const streamRef = useRef<MediaStream | null>(null);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
   const startCamera = async (deviceId?: string) => {
     if (streamRef.current) {
@@ -40,30 +39,6 @@ const CameraFragment = () => {
     startCamera(devices[nextIndex].deviceId);
   };
 
-  const uploadToServer = async (dataURL: string) => {
-    try {
-      const blob = await (await fetch(dataURL)).blob();
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "image/jpeg",
-        },
-        body: blob,
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        console.log("Upload berhasil:", data.fileName);
-        alert("Gambar berhasil disimpan sebagai: " + data.fileName);
-      } else {
-        console.error("Upload gagal:", data.message);
-      }
-    } catch (error) {
-      console.error("Error saat upload:", error);
-    }
-  };
-
   const handleCapture = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -74,7 +49,6 @@ const CameraFragment = () => {
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataURL = canvas.toDataURL("image/jpeg"); // gunakan JPEG
-        setImage(dataURL);
         uploadToServer(dataURL); // kirim ke backend
       }
     }
@@ -83,12 +57,6 @@ const CameraFragment = () => {
   const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-
-    const fileArray = Array.from(files);
-
-    // Konversi ke URL untuk preview
-    const imagePreviews = fileArray.map((file) => URL.createObjectURL(file));
-    setSelectedImages(imagePreviews);
 
     // Jika ingin upload langsung, kirim fileArray ke server
     // fileArray.forEach(uploadSingleFile)
