@@ -1,10 +1,10 @@
 // app/api/predict/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const imagePath = path.join(process.cwd(), 'public', 'images', 'esp32.jpg');
     
