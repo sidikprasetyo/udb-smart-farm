@@ -89,12 +89,12 @@ const StaffManagement = () => {
       querySnapshot.forEach((doc) => {
         staffData.push({
           id: doc.id,
-          ...(doc.data()),
+          ...doc.data(),
         } as Staff);
       });
 
       setStaffList(staffData);
-      
+
       // Only show notification if we actually have data AND this is not initial load
       if (staffData.length > 0 && hasInitialized.current) {
         addNotification("info", "Data Loaded", `Loaded ${staffData.length} staff records`);
@@ -318,17 +318,17 @@ const StaffManagement = () => {
   // Get role color
   const getRoleColor = (role: string) => {
     const colors: { [key: string]: string } = {
-      admin: "bg-red-100 text-red-800 border-red-200",
-      operator: "bg-blue-100 text-blue-800 border-blue-200",
-      petani: "bg-green-100 text-green-800 border-green-200",
-      manager: "bg-purple-100 text-purple-800 border-purple-200",
-      user: "bg-gray-100 text-gray-800 border-gray-200",
+      admin: "bg-red-50 text-red-700 border-red-200",
+      operator: "bg-blue-50 text-blue-700 border-blue-200",
+      petani: "bg-green-50 text-green-700 border-green-200",
+      manager: "bg-purple-50 text-purple-700 border-purple-200",
+      user: "bg-gray-50 text-gray-700 border-gray-200",
     };
     return colors[role] || colors.user;
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Notifications */}
       <NotificationContainer notifications={notifications} onRemoveNotification={removeNotification} position="top-right" />
 
@@ -351,197 +351,254 @@ const StaffManagement = () => {
         }
       />
 
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Staff Management</h1>
-        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <FaPlus className="w-4 h-4" />
-          Add New Staff
-        </button>
-      </div>
-
-      {/* Form */}
-      {showForm && (
-        <div className="bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold mb-4 text-slate-500 ">{editingStaff ? "Edit Staff" : "Create New Staff"}</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-slate-500">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Email *</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="staff@example.com"
-                disabled={!!editingStaff} // Disable email editing
-              />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Staff Management</h1>
+              <p className="text-gray-600 mt-1">Manage your team members and their permissions</p>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Username *</label>
-              <input
-                type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="John Doe"
-              />
-            </div>
-          </div>
-
-          <div className="mb-4 text-slate-500">
-            <label className="block text-sm font-medium mb-2">Roles *</label>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              {availableRoles.map((role) => (
-                <label key={role} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                  <input type="checkbox" checked={formData.roles.includes(role)} onChange={(e) => handleRoleChange(role, e.target.checked)} className="rounded" />
-                  <span className="text-sm capitalize">{role}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-4 text-slate-500">
-            <label className="block text-sm font-medium mb-1">Primary Role *</label>
-            <select value={formData.primaryRole} onChange={(e) => setFormData({ ...formData, primaryRole: e.target.value })} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              {formData.roles.map((role) => (
-                <option key={role} value={role} className="capitalize">
-                  {role}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Password fields - only show when creating new staff */}
-          {!editingStaff && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="text-slate-500">
-                <label className="block text-sm font-medium mb-1">Password *</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password || ""}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter password (min 6 characters)"
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                    {showPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="text-slate-500">
-                <label className="block text-sm font-medium mb-1">Confirm Password *</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword || ""}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Confirm password"
-                  />
-                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
-                    {showConfirmPassword ? <FaEyeSlash className="w-4 h-4" /> : <FaEye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button onClick={handleSubmit} disabled={loading} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-              {loading ? "Processing..." : editingStaff ? "Update Staff" : "Create Staff"}
-            </button>
-            <button onClick={handleCancel} className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
-              Cancel
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+            >
+              <FaPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add New Staff</span>
+              <span className="sm:hidden">Add Staff</span>
             </button>
           </div>
         </div>
-      )}
 
-      {/* Staff Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {staffList.map((staff) => (
-          <div key={staff.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-            {/* Card Header */}
-            <div className="p-4 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <FaUser className="w-5 h-5 text-blue-600" />
-                  </div>
+        {/* Form */}
+        {showForm && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaUser className="w-4 h-4 text-blue-600" />
+                </div>
+                {editingStaff ? "Edit Staff Member" : "Create New Staff Member"}
+              </h2>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-4">
                   <div>
-                    <h3 className="font-semibold text-gray-800">{staff.username}</h3>
-                    <p className="text-sm text-gray-500 flex items-center gap-1">
-                      <FaEnvelope className="w-3 h-3" />
-                      {staff.email}
-                    </p>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full p-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 disabled:bg-gray-100 disabled:text-gray-600"
+                      placeholder="staff@example.com"
+                      disabled={!!editingStaff}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                    <input
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      className="w-full p-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500"
+                      placeholder="John Doe"
+                    />
                   </div>
                 </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getRoleColor(staff.primaryRole)}`}>{staff.primaryRole.toUpperCase()}</span>
-              </div>
-            </div>
 
-            {/* Card Main */}
-            <div className="p-4">
-              <div className="mb-3">
-                <label className="text-sm font-medium text-gray-600">All Roles:</label>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {staff.roles.map((role) => (
-                    <span key={role} className={`px-2 py-1 text-xs font-medium rounded-md border ${getRoleColor(role)}`}>
-                      {role}
-                    </span>
-                  ))}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Assign Roles *</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {availableRoles.map((role) => (
+                        <label key={role} className="flex items-center space-x-3 p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all duration-200 bg-white">
+                          <input
+                            type="checkbox"
+                            checked={formData.roles.includes(role)}
+                            onChange={(e) => handleRoleChange(role, e.target.checked)}
+                            className="w-4 h-4 text-blue-600 border-2 border-gray-400 rounded focus:ring-blue-500 focus:ring-2"
+                          />
+                          <span className="text-sm font-medium text-gray-800 capitalize">{role}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Primary Role *</label>
+                    <select
+                      value={formData.primaryRole}
+                      onChange={(e) => setFormData({ ...formData, primaryRole: e.target.value })}
+                      className="w-full p-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900"
+                    >
+                      {formData.roles.map((role) => (
+                        <option key={role} value={role} className="capitalize text-gray-900">
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {staff.createdAt && <p className="text-xs text-gray-400">Created: {new Date(staff.createdAt.toDate ? staff.createdAt.toDate() : staff.createdAt).toLocaleDateString()}</p>}
-            </div>
+              {/* Password fields - only show when creating new staff */}
+              {!editingStaff && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password || ""}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="w-full p-4 pr-12 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500"
+                        placeholder="Enter password (min 6 characters)"
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors">
+                        {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
 
-            {/* Card Footer */}
-            <div className="p-4 border-t border-gray-100 bg-gray-50">
-              <div className="flex gap-2">
-                <button onClick={() => handleEditStaff(staff)} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
-                  <FaEdit className="w-3 h-3" />
-                  Edit
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password *</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={formData.confirmPassword || ""}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        className="w-full p-4 pr-12 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500"
+                        placeholder="Confirm password"
+                      />
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors">
+                        {showConfirmPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100">
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                >
+                  {loading ? "Processing..." : editingStaff ? "Update Staff" : "Create Staff"}
                 </button>
-                <button onClick={() => handleDeleteClick(staff)} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors">
-                  <FaTrash className="w-3 h-3" />
-                  Delete
+                <button onClick={handleCancel} className="flex-1 sm:flex-none px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium">
+                  Cancel
                 </button>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Empty State */}
-      {staffList.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <FaUser className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-600 mb-2">No Staff Found</h3>
-          <p className="text-gray-500 mb-4">Get started by adding your first staff member or setup initial data.</p>
-          <div className="flex justify-center gap-3">
-            <button onClick={() => setShowForm(true)} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              Add First Staff
-            </button>
-            <button onClick={handleSetupInitialData} className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              <FaDatabase className="w-4 h-4" />
-              Setup Initial Data
-            </button>
+        {/* Staff Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+          {staffList.map((staff) => (
+            <div key={staff.id} className="bg-white border border-gray-100 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden">
+              {/* Card Header */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <FaUser className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-lg">{staff.username}</h3>
+                      <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
+                        <FaEnvelope className="w-3 h-3" />
+                        {staff.email}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 text-xs font-bold rounded-full border-2 ${getRoleColor(staff.primaryRole)} shadow-sm`}>{staff.primaryRole.toUpperCase()}</span>
+                </div>
+              </div>
+
+              {/* Card Main */}
+              <div className="p-6">
+                <div className="mb-4">
+                  <label className="text-sm font-semibold text-gray-700 mb-3 block">Assigned Roles</label>
+                  <div className="flex flex-wrap gap-2">
+                    {staff.roles.map((role) => (
+                      <span key={role} className={`px-3 py-1 text-xs font-medium rounded-lg border ${getRoleColor(role)} shadow-sm`}>
+                        {role}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {staff.createdAt && (
+                  <div className="text-xs text-gray-500 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    Created: {new Date(staff.createdAt.toDate ? staff.createdAt.toDate() : staff.createdAt).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+
+              {/* Card Footer */}
+              <div className="p-6 pt-0">
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleEditStaff(staff)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                  >
+                    <FaEdit className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(staff)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-medium rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                  >
+                    <FaTrash className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {staffList.length === 0 && !loading && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <FaUser className="w-12 h-12 text-blue-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-3">No Staff Found</h3>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">Get started by adding your first staff member or setup initial data to begin managing your team.</p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+              >
+                Add First Staff
+              </button>
+              <button
+                onClick={handleSetupInitialData}
+                className="flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+              >
+                <FaDatabase className="w-5 h-5" />
+                Setup Initial Data
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Loading State */}
-      {loading && staffList.length === 0 && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading staff data...</p>
-        </div>
-      )}
+        {/* Loading State */}
+        {loading && staffList.length === 0 && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Loading Staff Data</h3>
+            <p className="text-gray-600">Please wait while we fetch your team information...</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
