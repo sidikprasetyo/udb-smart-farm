@@ -424,9 +424,13 @@ useEffect(() => {
             {/* History Table */}
             <div className="mb-8">
                 <div className="overflow-x-auto">
-                  <SensorHistory 
-                    data={historyData} 
-                    allData={allData}
+                  <SensorHistory
+                    data={historyData.map((item) => ({
+                      ...item, // salin semua properti yang ada
+                    }))}
+                    allData={allData.map((item) => ({
+                      ...item,
+                    }))}
                   />
                 </div>
             </div>

@@ -1,8 +1,114 @@
 import React, { useState, useMemo, useRef, useEffect, JSX } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CheckCircle, AlertCircle, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { RiFileExcel2Fill } from "react-icons/ri";
 import * as XLSX from "xlsx";
-import SensorPagination from "./SensorPagination";
+
+// Custom Toast Component
+interface ToastProps {
+  type: 'success' | 'error' | 'warning';
+  title: string;
+  message: string;
+  isVisible: boolean;
+  onClose: () => void;
+}
+
+const Toast: React.FC<ToastProps> = ({ type, title, message, isVisible, onClose }) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 4000); // Auto close after 4 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
+
+  const getToastStyle = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-50 border-green-200 text-green-800';
+      case 'error':
+        return 'bg-red-50 border-red-200 text-red-800';
+      case 'warning':
+        return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+      default:
+        return 'bg-gray-50 border-gray-200 text-gray-800';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'error':
+        return <AlertCircle className="w-5 h-5 text-red-500" />;
+      case 'warning':
+        return <AlertCircle className="w-5 h-5 text-yellow-500" />;
+      default:
+        return <AlertCircle className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  return (
+    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top duration-300">
+      <div className={`max-w-md w-full min-w-[350px] border rounded-lg shadow-lg p-4 ${getToastStyle()}`}>
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            {getIcon()}
+          </div>
+          <div className="ml-3 w-0 flex-1">
+            <p className="text-sm font-medium">{title}</p>
+            <p className="mt-1 text-sm">{message}</p>
+          </div>
+          <div className="ml-4 flex-shrink-0 flex">
+            <button
+              className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none"
+              onClick={onClose}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// SensorPagination Component (simplified version)
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+const SensorPagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+  return (
+    <div className="flex justify-center items-center gap-4 mt-6">
+      <button
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+        className="flex items-center justify-center w-10 h-10 border-2 border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 bg-white shadow-sm"
+      >
+        <ChevronLeft className="w-5 h-5 text-gray-600" />
+      </button>
+      
+      <div className="flex items-center gap-2 px-4 py-2">
+        <span className="text-sm font-medium text-gray-700">
+          Page {currentPage} of {totalPages}
+        </span>
+      </div>
+      
+      <button
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+        className="flex items-center justify-center w-10 h-10 border-2 border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 bg-white shadow-sm"
+      >
+        <ChevronRight className="w-5 h-5 text-gray-600" />
+      </button>
+    </div>
+  );
+};
 
 interface HistoryItem {
   id: string | number;
@@ -12,25 +118,69 @@ interface HistoryItem {
   icon: JSX.Element;
   waktu: string;
   color: string;
+  // Add other possible fields for type safety
+  timestamp?: string;
+  created_at?: string;
+  updatedAt?: string;
+  createdAt?: string;
+  date?: string;
+  time?: string;
+  [key: string]: unknown; // For dynamic sensor fields
 }
 
 interface Props {
-  data: HistoryItem[]; // ← Data yang dipaginate (halaman aktif)
-  allData: HistoryItem[]; // ← Semua data untuk filter dan export
+  data: HistoryItem[];
+  allData: HistoryItem[];
 }
 
+type FilterOption = "all" | "1d" | "3d" | "7d";
+
 const SensorHistory: React.FC<Props> = ({ allData }) => {
-  const [filterOption, setFilterOption] = useState<"all" | "1d" | "3d" | "7d">("all");
+  const [filterOption, setFilterOption] = useState<FilterOption>("all");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [allSensorData, setAllSensorData] = useState<HistoryItem[]>([]);
+  const exportRef = useRef<HTMLDivElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Toast state
+  const [toast, setToast] = useState<{
+    isVisible: boolean;
+    type: 'success' | 'error' | 'warning';
+    title: string;
+    message: string;
+  }>({
+    isVisible: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
+
+  // Show toast function
+  const showToast = (type: 'success' | 'error' | 'warning', title: string, message: string) => {
+    setToast({
+      isVisible: true,
+      type,
+      title,
+      message
+    });
+  };
+
+  // Close toast function
+  const closeToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (exportRef.current && !exportRef.current.contains(event.target as Node)) {
+        setExportDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -41,7 +191,226 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     setCurrentPage(1);
   }, [filterOption]);
 
-  // ✅ Konfigurasi range untuk setiap jenis sensor (sesuai dengan calculateStatus)
+  useEffect(() => {
+    const fetchAllSensors = async () => {
+      try {
+        const res = await fetch("/api/sensors/all");
+        const data = await res.json();
+        setAllSensorData(data);
+      } catch {
+        showToast('error', 'Fetch Error', 'Failed to fetch sensor data from server');
+      }
+    };
+
+    fetchAllSensors();
+  }, []);
+
+  const beautifySensorName = (key: string): string => {
+    const map: Record<string, string> = {
+      // Fields waktu yang baru
+      Date: "Tanggal",
+      Time: "Waktu",
+      
+      // Sensor fields
+      ph_tanah: "pH Tanah",
+      ec_tanah: "EC Tanah",
+      kelembaban_tanah: "Kelembaban Tanah (%)",
+      suhu_tanah: "Suhu Tanah (°C)",
+      suhu_udara: "Suhu Udara (°C)",
+      kelembaban_udara: "Kelembaban Udara (%)",
+      kecepatan_angin: "Kecepatan Angin (m/s)",
+      curah_hujan: "Curah Hujan (mm)",
+      radiasi: "Radiasi (W/m²)",
+      nitrogen: "Nitrogen (mg/kg)",
+      phosphorus: "Phosphorus (mg/kg)",
+      kalium: "Kalium (mg/kg)",
+      
+      // English versions
+      soil_ph: "pH Tanah",
+      soil_ec: "EC Tanah", 
+      soil_moisture: "Kelembaban Tanah (%)",
+      soil_temperature: "Suhu Tanah (°C)",
+      air_temperature: "Suhu Udara (°C)",
+      air_humidity: "Kelembaban Udara (%)",
+      wind_speed: "Kecepatan Angin (m/s)",
+      rainfall: "Curah Hujan (mm)",
+      radiation: "Radiasi (W/m²)",
+      potassium: "Kalium (mg/kg)",
+    };
+
+    return map[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  // Helper function untuk parsing tanggal dengan format DD/MM/YYYY HH:mm:ss
+  const parseCustomDate = (dateString: string): Date => {
+    try {
+      const ddmmyyyyPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(\s+\d{1,2}:\d{1,2}:\d{1,2})?$/;
+      const match = dateString.match(ddmmyyyyPattern);
+      
+      if (match) {
+        const [, day, month, year, time] = match;
+        const isoString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}${time || ' 00:00:00'}`;
+        return new Date(isoString);
+      }
+      
+      return new Date(dateString);
+    } catch {
+      return new Date(dateString);
+    }
+  };
+
+  const exportToExcel = (type: "filtered" | "all") => {
+    if (type === "filtered") {
+      if (filteredData.length === 0) {
+        showToast('warning', 'No Data', 'No filtered data available to export');
+        return;
+      }
+
+      const exportData = filteredData.map(({ waktu, name, value, status }) => {
+        const parsedDate = parseCustomDate(waktu);
+        const formattedDate = parsedDate.toLocaleDateString("en-GB");
+        const formattedTime = parsedDate.toLocaleTimeString("en-GB", { 
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        return {
+          Date: formattedDate,
+          Time: formattedTime,
+          Name: name,
+          Value: value,
+          Status: status,
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `filtered-sensor-data`);
+
+      const today = new Date().toISOString().split("T")[0];
+      const filename = `filtered-sensor-data-${today}.xlsx`;
+      XLSX.writeFile(workbook, filename);
+
+      showToast('success', 'Export Successful', `Filtered data exported as ${filename}`);
+
+    } else if (type === "all") {
+      if (allSensorData.length === 0) {
+        showToast('warning', 'No Data', 'No sensor data available to export');
+        return;
+      }
+
+      // Filter berdasarkan waktu jika filterOption !== 'all'
+      let dataToExport = [...allSensorData];
+      if (filterOption !== "all") {
+        const now = Date.now();
+        let threshold = now;
+
+        if (filterOption === "1d") threshold -= 1 * 24 * 60 * 60 * 1000;
+        else if (filterOption === "3d") threshold -= 3 * 24 * 60 * 60 * 1000;
+        else if (filterOption === "7d") threshold -= 7 * 24 * 60 * 60 * 1000;
+
+        dataToExport = dataToExport.filter((item) => {
+          const possibleTimeFields = [
+            item.waktu, 
+            item.timestamp, 
+            item.created_at, 
+            item.updatedAt, 
+            item.createdAt,
+            item.date,
+            item.time
+          ];
+          
+          let timeField: string | undefined = undefined;
+          for (const field of possibleTimeFields) {
+            if (field) {
+              timeField = field as string;
+              break;
+            }
+          }
+
+          if (!timeField) {
+            return false;
+          }
+
+          const time = parseCustomDate(timeField).getTime();
+          const isValidTime = !isNaN(time);
+          const isWithinRange = time >= threshold;
+          
+          return isValidTime && isWithinRange;
+        });
+      }
+
+      if (dataToExport.length === 0) {
+        showToast('warning', 'No Data Found', `No data available for the selected time range (${getFilterLabel(filterOption)})`);
+        return;
+      }
+
+      // Sort berdasarkan waktu dari terbaru ke terlama
+      dataToExport = dataToExport.sort((a, b) => {
+        const getTimeField = (item: HistoryItem) => {
+          return item.waktu || item.timestamp || item.created_at || item.updatedAt || item.createdAt || item.date || item.time;
+        };
+        
+        const timeFieldA = getTimeField(a);
+        const timeFieldB = getTimeField(b);
+        
+        if (!timeFieldA || !timeFieldB) return 0;
+        
+        const dateA = parseCustomDate(timeFieldA as string).getTime();
+        const dateB = parseCustomDate(timeFieldB as string).getTime();
+
+        if (isNaN(dateA) && isNaN(dateB)) return 0;
+        if (isNaN(dateA)) return 1;
+        if (isNaN(dateB)) return -1;
+
+        return dateB - dateA;
+      });
+
+      // Format data mentah menjadi objek Excel-friendly dengan semua sensor
+      const exportData = dataToExport.map((item) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, waktu, timestamp, created_at, updatedAt, createdAt, date, time, ...sensors } = item;
+        const timeField = waktu || timestamp || created_at || updatedAt || createdAt || date || time;
+
+        const parsedDate = parseCustomDate(timeField as string);
+        const formattedDate = parsedDate.toLocaleDateString("en-GB");
+        const formattedTime = parsedDate.toLocaleTimeString("en-GB", { 
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        return {
+          Date: formattedDate,
+          Time: formattedTime,
+          ...sensors,
+        };
+      });
+
+      const headers = Object.keys(exportData[0]).map((key) => beautifySensorName(key));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData, {
+        header: Object.keys(exportData[0]),
+      });
+
+      XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: "A1" });
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `all-sensor-data`);
+
+      const today = new Date().toISOString().split("T")[0];
+      const filterSuffix = filterOption !== "all" ? `-${filterOption}` : "";
+      const filename = `all-sensor-data${filterSuffix}-${today}.xlsx`;
+      XLSX.writeFile(workbook, filename);
+
+      showToast('success', 'Export Successful', `All sensor data exported as ${filename}`);
+    }
+  };
+
+  // Konfigurasi range untuk setiap jenis sensor
   const getSensorRange = (sensorName: string) => {
     const name = sensorName.toLowerCase();
 
@@ -70,24 +439,18 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     } else if (name.includes("potassium")) {
       return { min: 0, max: 300 };
     } else {
-      // Default range jika sensor tidak dikenali
       return { min: 0, max: 100 };
     }
   };
 
-  // ✅ Function untuk mengkonversi nilai sensor ke persentase
+  // Function untuk mengkonversi nilai sensor ke persentase
   const calculateProgressPercentage = (value: string, sensorName: string) => {
     const numericValue = parseFloat(value);
 
-    // Jika nilai bukan angka, return 0
     if (isNaN(numericValue)) return 0;
 
     const range = getSensorRange(sensorName);
-
-    // Konversi nilai ke persentase berdasarkan range
     let percentage = ((numericValue - range.min) / (range.max - range.min)) * 100;
-
-    // Pastikan persentase dalam range 0-100
     percentage = Math.max(0, Math.min(100, percentage));
 
     return percentage;
@@ -106,11 +469,10 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     }
   };
 
-  // ✅ Perbaikan: Filter dan sort data dari terbaru ke terlama
+  // Filter dan sort data dari terbaru ke terlama
   const filteredData = useMemo(() => {
-    let filtered = [...allData]; // Create copy to avoid mutating original
+    let filtered = [...allData];
 
-    // Apply time filter
     if (filterOption !== "all") {
       const now = Date.now();
       let threshold = now;
@@ -124,17 +486,14 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
       });
     }
 
-    // ✅ Sort berdasarkan waktu dari terbaru ke terlama (descending)
     return filtered.sort((a, b) => {
       const dateA = new Date(a.waktu).getTime();
       const dateB = new Date(b.waktu).getTime();
 
-      // Handle invalid dates - put them at the end
       if (isNaN(dateA) && isNaN(dateB)) return 0;
       if (isNaN(dateA)) return 1;
       if (isNaN(dateB)) return -1;
 
-      // Sort descending (terbaru dulu)
       return dateB - dateA;
     });
   }, [allData, filterOption]);
@@ -146,30 +505,7 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-  const exportAllToExcel = () => {
-    if (filteredData.length === 0) {
-      alert("No data available to export.");
-      return;
-    }
-
-    const exportData = filteredData.map(({ id, name, value, status, waktu }) => ({
-      ID: id,
-      Name: name,
-      Value: value,
-      Status: status,
-      Timestamp: waktu,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Sensor Data");
-
-    const today = new Date().toISOString().split("T")[0];
-    const filename = `filtered-sensor-data-${today}.xlsx`;
-    XLSX.writeFile(workbook, filename);
-  };
-
-  // ✅ Helper function untuk format tanggal yang aman
+  // Helper function untuk format tanggal yang aman
   const formatDate = (waktuString: string) => {
     try {
       const date = new Date(waktuString);
@@ -190,16 +526,24 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
       });
 
       return { date: formattedDate, time: formattedTime };
-    } catch (error) {
-      console.error("Error formatting date:", error, waktuString);
+    } catch {
       return { date: "Invalid Date", time: "Invalid Time" };
     }
   };
 
   return (
     <div>
+      {/* Toast Notification */}
+      <Toast
+        type={toast.type}
+        title={toast.title}
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={closeToast}
+      />
+
       {/* Filter + Export bar */}
-      <div className="bg-white w-full md:w-[40vw] lg:w-[20vw] shadow-md rounded-xl p-4 mb-4 flex flex-col md:flex-row items-start md:items-center gap-4">
+      <div className="bg-white w-full md:w-[40vw] lg:w-[22vw] shadow-md rounded-xl p-4 mb-4 flex flex-row items-start md:items-center gap-4">
         {/* Filter Dropdown */}
         <div className="relative w-full md:w-48" ref={dropdownRef}>
           <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center justify-between border border-gray-300 px-4 py-2 w-full rounded-md bg-white shadow-sm hover:bg-gray-100 text-sm text-gray-700">
@@ -209,12 +553,11 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
 
           {dropdownOpen && (
             <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded shadow">
-              {["all", "1d", "3d", "7d"].map((opt) => (
+              {(["all", "1d", "3d", "7d"] as FilterOption[]).map((opt) => (
                 <button
                   key={opt}
                   onClick={() => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    setFilterOption(opt as any);
+                    setFilterOption(opt);
                     setDropdownOpen(false);
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
@@ -226,11 +569,40 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
           )}
         </div>
 
-        {/* Export Button */}
-        <button onClick={exportAllToExcel} className="w-full md:w-auto flex items-center justify-center bg-[#166534] hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-semibold shadow">
-          <RiFileExcel2Fill className="w-4 h-4 mr-2" />
-          Export
-        </button>
+        {/* Export Dropdown */}
+        <div className="relative w-full md:w-auto" ref={exportRef}>
+          <button
+            onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+            className="w-full md:w-auto flex items-center justify-center bg-[#166534] hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-semibold shadow"
+          >
+            <RiFileExcel2Fill className="w-4 h-4 mr-2" />
+            Export
+            <ChevronDown className="ml-2 w-4 h-4" />
+          </button>
+
+          {exportDropdownOpen && (
+            <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded shadow">
+              <button
+                onClick={() => {
+                  exportToExcel("filtered");
+                  setExportDropdownOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+              >
+                Export Filtered Data
+              </button>
+              <button
+                onClick={() => {
+                  exportToExcel("all");
+                  setExportDropdownOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+              >
+                Export All Data
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Data Cards */}
@@ -239,7 +611,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
           <div className="col-span-full text-center text-gray-500 min-h-[20vh] flex items-center justify-center">No data available for the selected time range.</div>
         ) : (
           paginatedData.map((item) => {
-            // ✅ Gunakan function untuk menghitung persentase berdasarkan range sensor
             const progressValue = calculateProgressPercentage(item.value, item.name);
             const { date, time } = formatDate(item.waktu);
 
