@@ -333,7 +333,7 @@ useEffect(() => {
           id: `${doc.id}_${sensorId}`,
           docId: doc.id,
           name: sensorConfig.label,
-          value: `${numericValue}${sensorConfig.unit}`,
+          value: `${numericValue.toFixed(1)}${sensorConfig.unit}`,
           rawValue: numericValue,
           status: status,
           icon: sensorConfig.icon,
