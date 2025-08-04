@@ -273,7 +273,7 @@ const Home: React.FC = () => {
     onValue(sensorRef, (snapshot) => {
       const rawValue = snapshot.val() || "0";
       if (rawValue != null && !isNaN(parseFloat(rawValue))) {
-        const value = parseFloat(rawValue);
+        const value = parseFloat(parseFloat(rawValue).toFixed(1));
         const unit = units[key];
         const status = calculateStatus(key, value);
         const progress = Math.min(Math.max(Math.round(value), 0), 100);
