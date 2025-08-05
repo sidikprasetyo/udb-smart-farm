@@ -41,4 +41,5 @@ yarn-error.log*
 next-env.d.ts
 
 # images folder contents
-/public/images/
+/public/images/*
+!/public/images/.gitkeep

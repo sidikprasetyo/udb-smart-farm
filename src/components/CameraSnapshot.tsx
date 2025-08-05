@@ -84,7 +84,7 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
         
         let statusDisplay;
         if (lowerValue.includes('otomatis')  || 
-            lowerValue.includes('aktif') || lowerValue === 'on' || lowerValue === '1') {
+            lowerValue.includes('telah') || lowerValue === 'on' || lowerValue === '1') {
           statusDisplay = {
             text: "ACTIVE",
             color: "text-green-600",
@@ -93,7 +93,7 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
             isLoading: false
           };
         } else if (lowerValue.includes('tidak') || lowerValue.includes('bukan') || 
-                   lowerValue.includes('mati') || lowerValue.includes('dihentikan') || lowerValue === '0') {
+                   lowerValue.includes('jam') || lowerValue.includes('suhu') || lowerValue.includes('terlalu') || lowerValue.includes('tinggi') || lowerValue.includes('rendah') || lowerValue.includes('udara') || lowerValue.includes('kelembaban') || lowerValue.includes('tercapai') || lowerValue.includes('tanah') || lowerValue === '0') {
           statusDisplay = {
             text: "OFF",
             color: "text-red-600",
