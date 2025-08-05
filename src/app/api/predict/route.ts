@@ -36,8 +36,10 @@ async function handleESP32Prediction() {
 
   // Jalankan script Python untuk prediksi dengan enhanced model
   const pythonScript = path.join(process.cwd(), "predict_esp32_enhanced.py");
+  const modelPath = path.join(process.cwd(), "ai-model", "src", "models", "chili_disease_model.h5");
 
-  const prediction = await runPythonPrediction(pythonScript, imagePath);
+  // Use our trained model if it exists
+  const prediction = fs.existsSync(modelPath) ? await runPythonPredictionWithModel(pythonScript, imagePath, modelPath) : await runPythonPrediction(pythonScript, imagePath);
 
   return NextResponse.json({
     success: true,
@@ -145,9 +147,12 @@ async function handleUploadPrediction(request: Request) {
   fs.writeFileSync(filepath, buffer);
 
   try {
-    // Predict using enhanced script
+    // Use the enhanced script with our trained model
     const pythonScript = path.join(process.cwd(), "predict_esp32_enhanced.py");
-    const prediction = await runPythonPrediction(pythonScript, filepath);
+    const modelPath = path.join(process.cwd(), "ai-model", "src", "models", "chili_disease_model.h5");
+
+    // Pass model path as argument if it exists
+    const prediction = fs.existsSync(modelPath) ? await runPythonPredictionWithModel(pythonScript, filepath, modelPath) : await runPythonPrediction(pythonScript, filepath);
 
     // Clean up uploaded file
     fs.unlinkSync(filepath);
@@ -216,6 +221,39 @@ function runPythonPrediction(scriptPath: string, imagePath: string): Promise<{ p
       try {
         // Parse hasil JSON dari Python
         const result = JSON.parse(dataString.trim());
+        resolve(result);
+      } catch (parseError) {
+        reject(new Error(`Failed to parse Python output: ${parseError}`));
+      }
+    });
+  });
+}
+
+function runPythonPredictionWithModel(scriptPath: string, imagePath: string, modelPath: string): Promise<{ prediction?: string; confidence?: number; error?: string }> {
+  return new Promise((resolve, reject) => {
+    const python = spawn("python", [scriptPath, imagePath, "--model", modelPath, "--verbose"]);
+
+    let dataString = "";
+    let errorString = "";
+
+    python.stdout.on("data", (data) => {
+      dataString += data.toString();
+    });
+
+    python.stderr.on("data", (data) => {
+      errorString += data.toString();
+    });
+
+    python.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`Python script failed: ${errorString}`));
+        return;
+      }
+
+      try {
+        // Parse the last line as JSON (the actual result)
+        const lines = dataString.trim().split("\n");
+        const result = JSON.parse(lines[lines.length - 1]);
         resolve(result);
       } catch (parseError) {
         reject(new Error(`Failed to parse Python output: ${parseError}`));

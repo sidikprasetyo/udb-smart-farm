@@ -14,13 +14,19 @@ from pathlib import Path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'ai-model', 'src'))
 
 try:
-    from ai_model.src.model import ChiliDiseaseModel
-    from ai_model.src.disease_solutions import DiseaseSolutionProvider
-except ImportError:
-    # Fallback for direct execution
-    sys.path.append('ai-model/src')
     from model import ChiliDiseaseModel
     from disease_solutions import DiseaseSolutionProvider
+except ImportError:
+    # Try alternative import paths
+    try:
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'ai-model', 'src'))
+        from model import ChiliDiseaseModel
+        from disease_solutions import DiseaseSolutionProvider
+    except ImportError:
+        # Final fallback
+        sys.path.append('ai-model/src')
+        from model import ChiliDiseaseModel
+        from disease_solutions import DiseaseSolutionProvider
 
 def predict_image(image_path, model_path=None, include_solution=True, verbose=False):
     """
@@ -43,10 +49,24 @@ def predict_image(image_path, model_path=None, include_solution=True, verbose=Fa
         if model_path and os.path.exists(model_path):
             model.load_model(model_path)
         else:
-            default_model = 'ai-model/models/chili_disease_model.h5'
-            if os.path.exists(default_model):
-                model.load_model(default_model)
-            else:
+            # Try multiple possible paths for the trained model
+            possible_paths = [
+                'ai-model/src/models/chili_disease_model.h5',
+                'ai-model/models/chili_disease_model.h5', 
+                os.path.join(os.path.dirname(__file__), 'ai-model', 'src', 'models', 'chili_disease_model.h5'),
+                os.path.join(os.path.dirname(__file__), 'ai-model', 'models', 'chili_disease_model.h5')
+            ]
+            
+            model_loaded = False
+            for path in possible_paths:
+                if os.path.exists(path):
+                    model.load_model(path)
+                    model_loaded = True
+                    if verbose:
+                        print(f"Loaded model from: {path}")
+                    break
+            
+            if not model_loaded:
                 raise FileNotFoundError("No trained model found. Please train the model first.")
         
         if verbose:

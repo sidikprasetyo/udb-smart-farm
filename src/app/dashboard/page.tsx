@@ -8,26 +8,22 @@ import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import MobileMenu from "@/components/MobileMenu";
 import { DashboardData, SensorData } from "@/types/dashboard";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, serverTimestamp, onDisconnect } from "firebase/database";
 import { database, firestore, auth } from "@/lib/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
-import {
-  WiHumidity,
-  WiRaindrops,
-  WiStrongWind,
-  WiSolarEclipse,
-  WiThermometer,
-} from "react-icons/wi";
+import { WiHumidity, WiRaindrops, WiStrongWind, WiSolarEclipse, WiThermometer } from "react-icons/wi";
 import { MdOpacity, MdDeviceThermostat } from "react-icons/md";
 import { SlChemistry } from "react-icons/sl";
-import { GiChemicalTank , GiChemicalDrop, GiMinerals } from "react-icons/gi";
+import { GiChemicalTank, GiChemicalDrop, GiMinerals } from "react-icons/gi";
 import { FcElectricalSensor } from "react-icons/fc";
 
 const Home: React.FC = () => {
   const [user, loading] = useAuthState(auth);
   const [userName, setUserName] = useState<string>("Loading...");
-  
+  const [lastUpdateTimestamp, setLastUpdateTimestamp] = useState<number | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(true);
+
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     curah_hujan: {
       id: "curah_hujan",
@@ -289,11 +285,50 @@ const Home: React.FC = () => {
             progress,
             color: defaultColors[key],
           },
-          waktu: new Date().toISOString(),
+          waktu: lastUpdateTimestamp ? new Date(lastUpdateTimestamp).toISOString() : new Date().toISOString(),
         }));
       }
     });
   };
+
+  // ✅ Listen to Firebase system metadata for real-time last update
+  useEffect(() => {
+    const timestampRef = ref(database, "system/lastUpdate");
+    const connectedRef = ref(database, ".info/connected");
+
+    // Listen to connection status
+    onValue(connectedRef, (snapshot) => {
+      const connected = snapshot.val();
+      setIsConnected(connected === true);
+      console.log("Firebase connection status:", connected);
+    });
+
+    // Listen to system timestamp updates from Firebase
+    onValue(timestampRef, (snapshot) => {
+      const timestamp = snapshot.val();
+      if (timestamp) {
+        setLastUpdateTimestamp(timestamp);
+        console.log("Firebase timestamp updated:", new Date(timestamp).toLocaleString());
+      } else {
+        // If no timestamp exists, set current time
+        setLastUpdateTimestamp(Date.now());
+      }
+    });
+
+    // Create a heartbeat to update timestamp periodically (simulating ESP32)
+    const heartbeatInterval = setInterval(async () => {
+      try {
+        // Update timestamp via API (this simulates ESP32 or backend updating the timestamp)
+        await fetch("/api/system/timestamp", { method: "POST" });
+      } catch (error) {
+        console.error("Heartbeat update failed:", error);
+      }
+    }, 30000); // Update every 30 seconds
+
+    return () => {
+      clearInterval(heartbeatInterval);
+    };
+  }, []);
 
   useEffect(() => {
     loadSensorData("curah_hujan", "curah_hujan");
@@ -312,7 +347,6 @@ const Home: React.FC = () => {
 
   return (
     <MultiRoleProtectedRoute allowedRoles={["operator", "petani"]}>
-
       <div className="flex min-h-screen bg-gray-50">
         <MobileMenu currentPage="dashboard" />
         <div className="hidden lg:flex">
@@ -324,7 +358,40 @@ const Home: React.FC = () => {
             <RoleSwitcher />
           </div>
           <div className="flex-1 overflow-hidden">
-            <Dashboard data={dashboardData} />
+            <Dashboard data={dashboardData} lastUpdateTimestamp={lastUpdateTimestamp} isConnected={isConnected} />
+
+            {/* Firebase Debug Panel - Only in development */}
+            {process.env.NODE_ENV === "development" && (
+              <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200 max-w-sm">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3">Firebase Status</h3>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`}></div>
+                    <span className={isConnected ? "text-green-600" : "text-red-600"}>{isConnected ? "Connected" : "Disconnected"}</span>
+                  </div>
+
+                  <div className="text-gray-600">Last Update: {lastUpdateTimestamp ? new Date(lastUpdateTimestamp).toLocaleTimeString("id-ID") : "No data"}</div>
+
+                  <div className="text-gray-500">{lastUpdateTimestamp ? `${Math.floor((Date.now() - lastUpdateTimestamp) / 1000)}s ago` : ""}</div>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch("/api/system/timestamp", { method: "POST" });
+                    } catch (error) {
+                      console.error("Failed to update timestamp:", error);
+                    }
+                  }}
+                  className="mt-3 w-full px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                >
+                  Update Timestamp
+                </button>
+
+                <div className="mt-2 text-xs text-gray-500">Auto-update every 30s</div>
+              </div>
+            )}
           </div>
         </div>
       </div>

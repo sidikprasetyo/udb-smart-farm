@@ -42,7 +42,7 @@ const Cam = () => {
   const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize camera
-  const startCamera = useCallback(async (deviceId?: string) => {
+  const startCamera = useCallback(async (deviceId?: string, isRotating = false) => {
     try {
       setIsCameraReady(false);
       setCameraError(null);
@@ -58,9 +58,17 @@ const Cam = () => {
         setIsCameraReady(false);
       }, 10000);
 
-      // Stop existing stream
+      // Stop existing stream with proper cleanup
       if (streamRef) {
-        streamRef.getTracks().forEach((track) => track.stop());
+        streamRef.getTracks().forEach((track) => {
+          track.stop();
+        });
+        setStreamRef(null);
+
+        // Add small delay when rotating to allow proper camera release
+        if (isRotating) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
       }
 
       // Request camera permissions and stream
@@ -123,7 +131,7 @@ const Cam = () => {
         } else if (error.name === "NotFoundError") {
           setCameraError("Kamera tidak ditemukan. Pastikan kamera terhubung.");
         } else if (error.name === "NotReadableError") {
-          setCameraError("Kamera sedang digunakan aplikasi lain.");
+          setCameraError("Kamera sedang digunakan aplikasi lain atau device sedang switching.");
         } else {
           setCameraError("Error mengakses kamera: " + error.message);
         }
@@ -156,6 +164,7 @@ const Cam = () => {
             await startCamera(videoDevices[0].deviceId);
           } else {
             console.warn("No video devices found");
+            setCameraError("Tidak ada kamera yang ditemukan pada device ini.");
             setIsCameraReady(false);
           }
         }
@@ -190,12 +199,23 @@ const Cam = () => {
     const nextIndex = (currentDeviceIndex + 1) % devices.length;
     setCurrentDeviceIndex(nextIndex);
     setIsCameraReady(false);
+    setCameraError(null);
 
     try {
-      await startCamera(devices[nextIndex].deviceId);
+      await startCamera(devices[nextIndex].deviceId, true);
     } catch (error) {
       console.error("Error rotating camera:", error);
       setIsCameraReady(false);
+      setCameraError("Gagal mengganti kamera. Coba lagi dalam beberapa detik.");
+
+      // Retry after a short delay
+      setTimeout(async () => {
+        try {
+          await startCamera(devices[nextIndex].deviceId, true);
+        } catch (retryError) {
+          console.error("Retry error:", retryError);
+        }
+      }, 2000);
     }
   };
 
@@ -352,8 +372,10 @@ const Cam = () => {
       case "healthy":
         return "text-green-600 bg-green-50 border-green-200";
       case "leaf_curl":
+      case "leaf curl":
         return "text-orange-600 bg-orange-50 border-orange-200";
       case "leaf_spot":
+      case "leaf spot":
         return "text-red-600 bg-red-50 border-red-200";
       case "whitefly":
         return "text-yellow-600 bg-yellow-50 border-yellow-200";
@@ -362,6 +384,11 @@ const Cam = () => {
       default:
         return "text-gray-600 bg-gray-50 border-gray-200";
     }
+  };
+
+  // Format disease name for display
+  const formatDiseaseName = (prediction: string) => {
+    return prediction.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
@@ -411,7 +438,7 @@ const Cam = () => {
             <span className="font-medium">AI Detection</span>
           </div>
           <div className={`inline-block px-2 py-1 rounded text-sm font-medium ${getDiseaseColor(realtimePrediction.prediction)}`}>
-            {realtimePrediction.prediction} ({Math.round(realtimePrediction.confidence * 100)}%)
+            {formatDiseaseName(realtimePrediction.prediction)} ({Math.round(realtimePrediction.confidence * 100)}%)
           </div>
           <p className="text-xs opacity-75 mt-1">{realtimePrediction.timestamp}</p>
         </div>
@@ -491,12 +518,33 @@ const Cam = () => {
               <div className="mb-4 p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-semibold text-gray-800 mb-2">AI Analysis Result</h4>
                 <div className={`inline-block px-3 py-1 rounded-lg text-sm font-medium ${getDiseaseColor(capturePreview.analysis.prediction)}`}>
-                  {capturePreview.analysis.prediction} ({Math.round(capturePreview.analysis.confidence * 100)}%)
+                  {formatDiseaseName(capturePreview.analysis.prediction)} ({Math.round(capturePreview.analysis.confidence * 100)}%)
                 </div>
                 {capturePreview.analysis.solution && (
                   <div className="mt-3">
-                    <p className="font-medium text-gray-800">{capturePreview.analysis.solution.name}</p>
-                    <p className="text-sm text-gray-600 mt-1">{capturePreview.analysis.solution.description}</p>
+                    <h5 className="font-medium text-gray-800 mb-2">Solusi & Penanganan:</h5>
+
+                    {capturePreview.analysis.solution.treatment && capturePreview.analysis.solution.treatment.length > 0 && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium text-gray-700">Penanganan:</p>
+                        <ul className="text-sm text-gray-600 list-disc list-inside">
+                          {capturePreview.analysis.solution.treatment.slice(0, 3).map((treatment, index) => (
+                            <li key={index}>{treatment}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {capturePreview.analysis.solution.prevention && capturePreview.analysis.solution.prevention.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Pencegahan:</p>
+                        <ul className="text-sm text-gray-600 list-disc list-inside">
+                          {capturePreview.analysis.solution.prevention.slice(0, 3).map((prevention, index) => (
+                            <li key={index}>{prevention}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -1,13 +1,51 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { DashboardData } from "../types/dashboard";
 import SensorCard from "./SensorCard";
 import CameraSnapshot from "./CameraSnapshot";
 
 interface DashboardProps {
   data: DashboardData;
+  lastUpdateTimestamp?: number | null;
+  isConnected?: boolean;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ data }) => {
+const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConnected = true }) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every second for relative time display
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Calculate time ago
+  const getTimeAgo = (timestamp: number | null) => {
+    if (!timestamp) return "--:--";
+
+    const now = currentTime.getTime();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (seconds < 60) return `${seconds}s ago`;
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return new Date(timestamp).toLocaleDateString();
+  };
+
+  // Format timestamp for display
+  const formatTimestamp = (timestamp: number | null) => {
+    if (!timestamp) return "--:--";
+    return new Date(timestamp).toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
   // Organize sensors into logical groups for better layout
   const sensorGroups = [
     {
@@ -67,9 +105,14 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
             <div className="text-2xl font-bold text-blue-600">12</div>
             <div className="text-sm text-blue-600">Total Sensors</div>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-600">{data.waktu ? new Date(data.waktu).toLocaleTimeString() : "--:--"}</div>
+          <div className="text-center p-4 bg-gray-50 rounded-lg relative">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`}></div>
+              <div className="text-lg font-bold text-gray-600">{formatTimestamp(lastUpdateTimestamp ?? null)}</div>
+            </div>
+            <div className="text-xs text-gray-500">{getTimeAgo(lastUpdateTimestamp ?? null)}</div>
             <div className="text-sm text-gray-600">Last Update</div>
+            <div className={`text-xs mt-1 ${isConnected ? "text-green-600" : "text-red-600"}`}>{isConnected ? "Connected" : "Disconnected"}</div>
           </div>
         </div>
       </div>

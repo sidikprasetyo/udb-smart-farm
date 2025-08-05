@@ -15,9 +15,9 @@ load_dotenv()
 class ChiliDiseaseModel:
     def __init__(self):
         self.img_size = int(os.getenv('IMAGE_SIZE', 224))
-        self.batch_size = int(os.getenv('BATCH_SIZE', 32))
-        self.learning_rate = float(os.getenv('LEARNING_RATE', 0.001))
-        self.classes = os.getenv('DISEASE_CLASSES', 'healthy,leaf_curl,leaf_spot,whitefly,yellowish').split(',')
+        self.batch_size = int(os.getenv('BATCH_SIZE', 16))  # Reduced for better training with small dataset
+        self.learning_rate = float(os.getenv('LEARNING_RATE', 0.0001))  # Lower learning rate
+        self.classes = ['healthy', 'leaf_curl', 'leaf_spot', 'whitefly', 'yellowish']  # Match folder names
         self.num_classes = len(self.classes)
         self.model = None
         
@@ -58,31 +58,61 @@ class ChiliDiseaseModel:
             height_shift_range=0.2,
             horizontal_flip=True,
             zoom_range=0.2,
-            fill_mode='nearest'
+            fill_mode='nearest',
+            brightness_range=[0.8, 1.2],
+            shear_range=0.1
         )
         
         val_datagen = ImageDataGenerator(rescale=1./255)
+        
+        # Create class indices mapping to handle folder names with spaces
+        class_indices = {
+            'healthy': 0,
+            'leaf curl': 1, 
+            'leaf spot': 2,
+            'whitefly': 3,
+            'yellowish': 4
+        }
         
         train_generator = train_datagen.flow_from_directory(
             train_path,
             target_size=(self.img_size, self.img_size),
             batch_size=self.batch_size,
-            class_mode='categorical'
+            class_mode='categorical',
+            shuffle=True,
+            seed=42
         )
         
         val_generator = val_datagen.flow_from_directory(
             val_path,
             target_size=(self.img_size, self.img_size),
             batch_size=self.batch_size,
-            class_mode='categorical'
+            class_mode='categorical',
+            shuffle=False
         )
+        
+        # Update class names to match our internal representation
+        self.class_names_mapping = {
+            'healthy': 'healthy',
+            'leaf curl': 'leaf_curl',
+            'leaf spot': 'leaf_spot', 
+            'whitefly': 'whitefly',
+            'yellowish': 'yellowish'
+        }
+        
+        print(f"Found {train_generator.samples} training images")
+        print(f"Found {val_generator.samples} validation images")
+        print(f"Classes: {list(train_generator.class_indices.keys())}")
         
         return train_generator, val_generator
     
-    def train(self, train_path, val_path, epochs=50):
+    def train(self, train_path, val_path, epochs=30):
         """Training model"""
         if self.model is None:
             self.create_model()
+        
+        # Create models directory if it doesn't exist
+        os.makedirs('models', exist_ok=True)
         
         train_gen, val_gen = self.prepare_data(train_path, val_path)
         
@@ -92,27 +122,35 @@ class ChiliDiseaseModel:
                 'models/chili_disease_model.h5',
                 save_best_only=True,
                 monitor='val_accuracy',
-                mode='max'
+                mode='max',
+                verbose=1
             ),
             EarlyStopping(
                 monitor='val_loss',
-                patience=10,
-                restore_best_weights=True
+                patience=8,
+                restore_best_weights=True,
+                verbose=1
             ),
             ReduceLROnPlateau(
                 monitor='val_loss',
-                factor=0.2,
-                patience=5,
-                min_lr=0.0001
+                factor=0.3,
+                patience=4,
+                min_lr=0.00001,
+                verbose=1
             )
         ]
+        
+        print(f"Starting training for {epochs} epochs...")
+        print(f"Batch size: {self.batch_size}")
+        print(f"Learning rate: {self.learning_rate}")
         
         # Train model
         history = self.model.fit(
             train_gen,
             epochs=epochs,
             validation_data=val_gen,
-            callbacks=callbacks
+            callbacks=callbacks,
+            verbose=1
         )
         
         return history
@@ -213,13 +251,47 @@ if __name__ == "__main__":
     # Initialize model
     model = ChiliDiseaseModel()
     
-    # Train model
-    train_path = os.getenv('TRAIN_PATH', '../datasetImage/train')
-    val_path = os.getenv('VAL_PATH', '../datasetImage/val')
+    # Train model with correct absolute paths
+    train_path = '../../datasetImage/train'
+    val_path = '../../datasetImage/val'
     
-    print("Starting training...")
-    history = model.train(train_path, val_path, epochs=50)
+    print("=" * 50)
+    print("CHILI DISEASE DETECTION MODEL TRAINING")
+    print("=" * 50)
+    print(f"Training data path: {os.path.abspath(train_path)}")
+    print(f"Validation data path: {os.path.abspath(val_path)}")
+    print(f"Image size: {model.img_size}x{model.img_size}")
+    print(f"Number of classes: {model.num_classes}")
+    print(f"Classes: {model.classes}")
+    print("=" * 50)
     
-    # Plot results
-    model.plot_training_history(history)
-    print("Training completed!")
+    try:
+        print("Starting training...")
+        history = model.train(train_path, val_path, epochs=25)
+        
+        # Plot results
+        print("Training completed! Plotting results...")
+        model.plot_training_history(history)
+        
+        # Test prediction with a sample image
+        test_path = '../../datasetImage/test/healthy'
+        test_images = [f for f in os.listdir(test_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        if test_images:
+            test_image = os.path.join(test_path, test_images[0])
+            print(f"\nTesting prediction with: {test_image}")
+            result = model.predict(test_image)
+            print(f"Prediction: {result['prediction']}")
+            print(f"Confidence: {result['confidence']:.3f}")
+            print("All predictions:")
+            for class_name, confidence in result['all_predictions'].items():
+                print(f"  {class_name}: {confidence:.3f}")
+        
+        print("\n" + "=" * 50)
+        print("TRAINING COMPLETED SUCCESSFULLY!")
+        print("Model saved as: models/chili_disease_model.h5")
+        print("=" * 50)
+        
+    except Exception as e:
+        print(f"Error during training: {str(e)}")
+        import traceback
+        traceback.print_exc()
