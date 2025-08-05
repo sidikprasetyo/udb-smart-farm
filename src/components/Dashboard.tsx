@@ -30,22 +30,54 @@ const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConn
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
+    if (seconds < 5) return "Just now";
     if (seconds < 60) return `${seconds}s ago`;
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
-    return new Date(timestamp).toLocaleDateString();
+    if (days < 7) return `${days}d ago`;
+    return new Date(timestamp).toLocaleDateString('id-ID');
   };
 
   // Format timestamp for display
   const formatTimestamp = (timestamp: number | null) => {
-    if (!timestamp) return "--:--";
+    if (!timestamp) return "--:--:--";
     return new Date(timestamp).toLocaleTimeString("id-ID", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
     });
   };
+
+  // Get connection status color and text
+  const getConnectionStatus = () => {
+    if (!isConnected) {
+      return {
+        color: "text-red-600",
+        bgColor: "bg-red-500",
+        text: "Disconnected",
+      };
+    }
+
+    // Check if timestamp is recent (within last 30 seconds)
+    const timeDiff = lastUpdateTimestamp ? (Date.now() - lastUpdateTimestamp) / 1000 : Infinity;
+    if (timeDiff > 30) {
+      return {
+        color: "text-orange-600",
+        bgColor: "bg-orange-500",
+        text: "Stale Data",
+      };
+    }
+
+    return {
+      color: "text-green-600",
+      bgColor: "bg-green-500",
+      text: "Live",
+    };
+  };
+
+  const connectionStatus = getConnectionStatus();
   // Organize sensors into logical groups for better layout
   const sensorGroups = [
     {
@@ -107,12 +139,14 @@ const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConn
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg relative">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`}></div>
+              <div className={`w-2 h-2 rounded-full ${connectionStatus.bgColor} ${isConnected ? 'animate-pulse' : ''}`}></div>
               <div className="text-lg font-bold text-gray-600">{formatTimestamp(lastUpdateTimestamp ?? null)}</div>
             </div>
-            <div className="text-xs text-gray-500">{getTimeAgo(lastUpdateTimestamp ?? null)}</div>
-            <div className="text-sm text-gray-600">Last Update</div>
-            <div className={`text-xs mt-1 ${isConnected ? "text-green-600" : "text-red-600"}`}>{isConnected ? "Connected" : "Disconnected"}</div>
+            <div className="text-xs text-gray-500 mb-1">{getTimeAgo(lastUpdateTimestamp ?? null)}</div>
+            <div className="text-sm text-gray-600 mb-1">Last Update</div>
+            <div className={`text-xs ${connectionStatus.color} font-medium`}>
+              {connectionStatus.text}
+            </div>
           </div>
         </div>
       </div>

@@ -274,6 +274,10 @@ const Home: React.FC = () => {
         const status = calculateStatus(key, value);
         const progress = Math.min(Math.max(Math.round(value), 0), 100);
 
+        // Update timestamp whenever sensor data changes
+        const currentTimestamp = Date.now();
+        setLastUpdateTimestamp(currentTimestamp);
+
         setDashboardData((prevData) => ({
           ...prevData,
           [key]: {
@@ -285,10 +289,28 @@ const Home: React.FC = () => {
             progress,
             color: defaultColors[key],
           },
-          waktu: lastUpdateTimestamp ? new Date(lastUpdateTimestamp).toISOString() : new Date().toISOString(),
+          waktu: new Date(currentTimestamp).toISOString(),
         }));
+
+        // Update Firebase timestamp when sensor data changes
+        updateFirebaseTimestamp(currentTimestamp);
       }
     });
+  };
+
+  // Function to update Firebase timestamp
+  const updateFirebaseTimestamp = async (timestamp: number) => {
+    try {
+      await fetch("/api/system/timestamp", { 
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ timestamp })
+      });
+    } catch (error) {
+      console.error("Failed to update Firebase timestamp:", error);
+    }
   };
 
   // ✅ Listen to Firebase system metadata for real-time last update
@@ -297,35 +319,39 @@ const Home: React.FC = () => {
     const connectedRef = ref(database, ".info/connected");
 
     // Listen to connection status
-    onValue(connectedRef, (snapshot) => {
+    const unsubscribeConnection = onValue(connectedRef, (snapshot) => {
       const connected = snapshot.val();
       setIsConnected(connected === true);
       console.log("Firebase connection status:", connected);
     });
 
     // Listen to system timestamp updates from Firebase
-    onValue(timestampRef, (snapshot) => {
+    const unsubscribeTimestamp = onValue(timestampRef, (snapshot) => {
       const timestamp = snapshot.val();
       if (timestamp) {
         setLastUpdateTimestamp(timestamp);
         console.log("Firebase timestamp updated:", new Date(timestamp).toLocaleString());
       } else {
-        // If no timestamp exists, set current time
-        setLastUpdateTimestamp(Date.now());
+        // If no timestamp exists, initialize with current time
+        const now = Date.now();
+        setLastUpdateTimestamp(now);
+        updateFirebaseTimestamp(now);
       }
     });
 
-    // Create a heartbeat to update timestamp periodically (simulating ESP32)
+    // Reduced heartbeat interval for more responsive updates
     const heartbeatInterval = setInterval(async () => {
       try {
-        // Update timestamp via API (this simulates ESP32 or backend updating the timestamp)
-        await fetch("/api/system/timestamp", { method: "POST" });
+        const now = Date.now();
+        await updateFirebaseTimestamp(now);
       } catch (error) {
         console.error("Heartbeat update failed:", error);
       }
-    }, 30000); // Update every 30 seconds
+    }, 10000); // Update every 10 seconds instead of 30
 
     return () => {
+      unsubscribeConnection();
+      unsubscribeTimestamp();
       clearInterval(heartbeatInterval);
     };
   }, []);
@@ -363,17 +389,47 @@ const Home: React.FC = () => {
             {/* Firebase Debug Panel - Only in development */}
             {process.env.NODE_ENV === "development" && (
               <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200 max-w-sm">
-                <h3 className="text-sm font-semibold text-gray-800 mb-3">Firebase Status</h3>
+                <h3 className="text-sm font-semibold text-gray-800 mb-3">Firebase Real-time Status</h3>
 
                 <div className="space-y-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`}></div>
-                    <span className={isConnected ? "text-green-600" : "text-red-600"}>{isConnected ? "Connected" : "Disconnected"}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`}></div>
+                      <span className={isConnected ? "text-green-600" : "text-red-600"}>
+                        {isConnected ? "Live Connection" : "Disconnected"}
+                      </span>
+                    </div>
+                    <div className="text-gray-400 text-xs">10s sync</div>
                   </div>
 
-                  <div className="text-gray-600">Last Update: {lastUpdateTimestamp ? new Date(lastUpdateTimestamp).toLocaleTimeString("id-ID") : "No data"}</div>
+                  <div className="text-gray-600">
+                    Last Update: {lastUpdateTimestamp ? new Date(lastUpdateTimestamp).toLocaleTimeString("id-ID") : "No data"}
+                  </div>
 
-                  <div className="text-gray-500">{lastUpdateTimestamp ? `${Math.floor((Date.now() - lastUpdateTimestamp) / 1000)}s ago` : ""}</div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">
+                      {lastUpdateTimestamp ? 
+                        (() => {
+                          const secondsAgo = Math.floor((Date.now() - lastUpdateTimestamp) / 1000);
+                          return secondsAgo < 5 ? "Just now" : `${secondsAgo}s ago`;
+                        })() : ""
+                      }
+                    </span>
+                    <div className={`text-xs px-2 py-1 rounded-full ${
+                      lastUpdateTimestamp && (Date.now() - lastUpdateTimestamp) < 15000 
+                        ? "bg-green-100 text-green-800" 
+                        : lastUpdateTimestamp && (Date.now() - lastUpdateTimestamp) < 60000
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                    }`}>
+                      {lastUpdateTimestamp && (Date.now() - lastUpdateTimestamp) < 15000 
+                        ? "Live" 
+                        : lastUpdateTimestamp && (Date.now() - lastUpdateTimestamp) < 60000
+                        ? "Stale"
+                        : "Offline"
+                      }
+                    </div>
+                  </div>
                 </div>
 
                 <button
@@ -386,10 +442,12 @@ const Home: React.FC = () => {
                   }}
                   className="mt-3 w-full px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
                 >
-                  Update Timestamp
+                  Force Update
                 </button>
 
-                <div className="mt-2 text-xs text-gray-500">Auto-update every 30s</div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Real-time sync • Updates on sensor changes
+                </div>
               </div>
             )}
           </div>
