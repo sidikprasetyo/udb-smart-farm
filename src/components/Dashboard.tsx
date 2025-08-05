@@ -37,7 +37,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConn
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    return new Date(timestamp).toLocaleDateString('id-ID');
+    return new Date(timestamp).toLocaleDateString("id-ID");
   };
 
   // Format timestamp for display
@@ -139,14 +139,12 @@ const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConn
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg relative">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <div className={`w-2 h-2 rounded-full ${connectionStatus.bgColor} ${isConnected ? 'animate-pulse' : ''}`}></div>
+              <div className={`w-2 h-2 rounded-full ${connectionStatus.bgColor} ${isConnected ? "animate-pulse" : ""}`}></div>
               <div className="text-lg font-bold text-gray-600">{formatTimestamp(lastUpdateTimestamp ?? null)}</div>
             </div>
             <div className="text-xs text-gray-500 mb-1">{getTimeAgo(lastUpdateTimestamp ?? null)}</div>
             <div className="text-sm text-gray-600 mb-1">Last Update</div>
-            <div className={`text-xs ${connectionStatus.color} font-medium`}>
-              {connectionStatus.text}
-            </div>
+            <div className={`text-xs ${connectionStatus.color} font-medium`}>{connectionStatus.text}</div>
           </div>
         </div>
       </div>

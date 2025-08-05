@@ -301,12 +301,12 @@ const Home: React.FC = () => {
   // Function to update Firebase timestamp
   const updateFirebaseTimestamp = async (timestamp: number) => {
     try {
-      await fetch("/api/system/timestamp", { 
+      await fetch("/api/system/timestamp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ timestamp })
+        body: JSON.stringify({ timestamp }),
       });
     } catch (error) {
       console.error("Failed to update Firebase timestamp:", error);
@@ -395,39 +395,32 @@ const Home: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`}></div>
-                      <span className={isConnected ? "text-green-600" : "text-red-600"}>
-                        {isConnected ? "Live Connection" : "Disconnected"}
-                      </span>
+                      <span className={isConnected ? "text-green-600" : "text-red-600"}>{isConnected ? "Live Connection" : "Disconnected"}</span>
                     </div>
                     <div className="text-gray-400 text-xs">10s sync</div>
                   </div>
 
-                  <div className="text-gray-600">
-                    Last Update: {lastUpdateTimestamp ? new Date(lastUpdateTimestamp).toLocaleTimeString("id-ID") : "No data"}
-                  </div>
+                  <div className="text-gray-600">Last Update: {lastUpdateTimestamp ? new Date(lastUpdateTimestamp).toLocaleTimeString("id-ID") : "No data"}</div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">
-                      {lastUpdateTimestamp ? 
-                        (() => {
-                          const secondsAgo = Math.floor((Date.now() - lastUpdateTimestamp) / 1000);
-                          return secondsAgo < 5 ? "Just now" : `${secondsAgo}s ago`;
-                        })() : ""
-                      }
+                      {lastUpdateTimestamp
+                        ? (() => {
+                            const secondsAgo = Math.floor((Date.now() - lastUpdateTimestamp) / 1000);
+                            return secondsAgo < 5 ? "Just now" : `${secondsAgo}s ago`;
+                          })()
+                        : ""}
                     </span>
-                    <div className={`text-xs px-2 py-1 rounded-full ${
-                      lastUpdateTimestamp && (Date.now() - lastUpdateTimestamp) < 15000 
-                        ? "bg-green-100 text-green-800" 
-                        : lastUpdateTimestamp && (Date.now() - lastUpdateTimestamp) < 60000
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                    }`}>
-                      {lastUpdateTimestamp && (Date.now() - lastUpdateTimestamp) < 15000 
-                        ? "Live" 
-                        : lastUpdateTimestamp && (Date.now() - lastUpdateTimestamp) < 60000
-                        ? "Stale"
-                        : "Offline"
-                      }
+                    <div
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 15000
+                          ? "bg-green-100 text-green-800"
+                          : lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 60000
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 15000 ? "Live" : lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 60000 ? "Stale" : "Offline"}
                     </div>
                   </div>
                 </div>
@@ -445,9 +438,7 @@ const Home: React.FC = () => {
                   Force Update
                 </button>
 
-                <div className="mt-2 text-xs text-gray-500">
-                  Real-time sync • Updates on sensor changes
-                </div>
+                <div className="mt-2 text-xs text-gray-500">Real-time sync • Updates on sensor changes</div>
               </div>
             )}
           </div>

@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.text();
     let customTimestamp = null;
-    
+
     // Try to parse JSON body if it exists
     if (body) {
       try {
