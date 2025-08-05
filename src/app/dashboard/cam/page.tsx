@@ -42,102 +42,105 @@ const Cam = () => {
   const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize camera
-  const startCamera = useCallback(async (deviceId?: string, isRotating = false) => {
-    try {
-      setIsCameraReady(false);
-      setCameraError(null);
-
-      // Clear any existing timeout
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-      }
-
-      // Set timeout for camera initialization
-      initTimeoutRef.current = setTimeout(() => {
-        setCameraError("Timeout: Kamera tidak dapat diinisialisasi dalam 10 detik");
+  const startCamera = useCallback(
+    async (deviceId?: string, isRotating = false) => {
+      try {
         setIsCameraReady(false);
-      }, 10000);
+        setCameraError(null);
 
-      // Stop existing stream with proper cleanup
-      if (streamRef) {
-        streamRef.getTracks().forEach((track) => {
-          track.stop();
-        });
-        setStreamRef(null);
-
-        // Add small delay when rotating to allow proper camera release
-        if (isRotating) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
+        // Clear any existing timeout
+        if (initTimeoutRef.current) {
+          clearTimeout(initTimeoutRef.current);
         }
-      }
 
-      // Request camera permissions and stream
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          deviceId: deviceId ? { exact: deviceId } : undefined,
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 },
-          facingMode: deviceId ? undefined : "environment",
-        },
-      });
-
-      if (videoRef.current && stream) {
-        videoRef.current.srcObject = stream;
-
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = () => {
-          if (videoRef.current) {
-            videoRef.current
-              .play()
-              .then(() => {
-                // Clear timeout on success
-                if (initTimeoutRef.current) {
-                  clearTimeout(initTimeoutRef.current);
-                }
-
-                setStreamRef(stream);
-                setIsCameraReady(true);
-                setCameraError(null);
-                console.log("Camera initialized successfully");
-              })
-              .catch((error) => {
-                console.error("Error playing video:", error);
-                setIsCameraReady(false);
-                setCameraError("Error memulai video: " + error.message);
-              });
-          }
-        };
-
-        // Handle video errors
-        videoRef.current.onerror = (error) => {
-          console.error("Video error:", error);
+        // Set timeout for camera initialization
+        initTimeoutRef.current = setTimeout(() => {
+          setCameraError("Timeout: Kamera tidak dapat diinisialisasi dalam 10 detik");
           setIsCameraReady(false);
-          setCameraError("Error pada video stream");
-        };
-      }
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      setIsCameraReady(false);
+        }, 10000);
 
-      // Clear timeout on error
-      if (initTimeoutRef.current) {
-        clearTimeout(initTimeoutRef.current);
-      }
+        // Stop existing stream with proper cleanup
+        if (streamRef) {
+          streamRef.getTracks().forEach((track) => {
+            track.stop();
+          });
+          setStreamRef(null);
 
-      // Show user-friendly error message
-      if (error instanceof Error) {
-        if (error.name === "NotAllowedError") {
-          setCameraError("Akses kamera ditolak. Silakan izinkan akses kamera di browser.");
-        } else if (error.name === "NotFoundError") {
-          setCameraError("Kamera tidak ditemukan. Pastikan kamera terhubung.");
-        } else if (error.name === "NotReadableError") {
-          setCameraError("Kamera sedang digunakan aplikasi lain atau device sedang switching.");
-        } else {
-          setCameraError("Error mengakses kamera: " + error.message);
+          // Add small delay when rotating to allow proper camera release
+          if (isRotating) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+        }
+
+        // Request camera permissions and stream
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            deviceId: deviceId ? { exact: deviceId } : undefined,
+            width: { ideal: 1280, min: 640 },
+            height: { ideal: 720, min: 480 },
+            facingMode: deviceId ? undefined : "environment",
+          },
+        });
+
+        if (videoRef.current && stream) {
+          videoRef.current.srcObject = stream;
+
+          // Wait for video to be ready
+          videoRef.current.onloadedmetadata = () => {
+            if (videoRef.current) {
+              videoRef.current
+                .play()
+                .then(() => {
+                  // Clear timeout on success
+                  if (initTimeoutRef.current) {
+                    clearTimeout(initTimeoutRef.current);
+                  }
+
+                  setStreamRef(stream);
+                  setIsCameraReady(true);
+                  setCameraError(null);
+                  console.log("Camera initialized successfully");
+                })
+                .catch((error) => {
+                  console.error("Error playing video:", error);
+                  setIsCameraReady(false);
+                  setCameraError("Error memulai video: " + error.message);
+                });
+            }
+          };
+
+          // Handle video errors
+          videoRef.current.onerror = (error) => {
+            console.error("Video error:", error);
+            setIsCameraReady(false);
+            setCameraError("Error pada video stream");
+          };
+        }
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        setIsCameraReady(false);
+
+        // Clear timeout on error
+        if (initTimeoutRef.current) {
+          clearTimeout(initTimeoutRef.current);
+        }
+
+        // Show user-friendly error message
+        if (error instanceof Error) {
+          if (error.name === "NotAllowedError") {
+            setCameraError("Akses kamera ditolak. Silakan izinkan akses kamera di browser.");
+          } else if (error.name === "NotFoundError") {
+            setCameraError("Kamera tidak ditemukan. Pastikan kamera terhubung.");
+          } else if (error.name === "NotReadableError") {
+            setCameraError("Kamera sedang digunakan aplikasi lain atau device sedang switching.");
+          } else {
+            setCameraError("Error mengakses kamera: " + error.message);
+          }
         }
       }
-    }
-  }, []);
+    },
+    [streamRef]
+  );
 
   // Get available devices
   useEffect(() => {
@@ -190,7 +193,7 @@ const Cam = () => {
         clearTimeout(initTimeoutRef.current);
       }
     };
-  }, [startCamera]);
+  }, [startCamera, streamRef]);
 
   // Rotate camera
   const handleRotateCamera = async () => {

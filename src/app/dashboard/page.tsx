@@ -8,7 +8,7 @@ import MultiRoleProtectedRoute from "@/components/MultiRoleProtectedRoute";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import MobileMenu from "@/components/MobileMenu";
 import { DashboardData, SensorData } from "@/types/dashboard";
-import { ref, onValue, serverTimestamp, onDisconnect } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 import { database, firestore, auth } from "@/lib/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
