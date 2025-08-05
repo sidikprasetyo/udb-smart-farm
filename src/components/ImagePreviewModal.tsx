@@ -1,5 +1,6 @@
 import React from "react";
 import { X, Upload, Trash2 } from "lucide-react";
+import Image from "next/image";
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ isOpen, on
               {images.map((image) => (
                 <div key={image.id} className="relative group">
                   <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <img src={image.url} alt={image.name} className="w-full h-full object-cover" />
+                    <Image src={image.url} alt={image.name} fill className="object-cover" />
                   </div>
 
                   {/* Remove Button */}

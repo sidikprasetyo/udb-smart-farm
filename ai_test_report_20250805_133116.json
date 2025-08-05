@@ -1,0 +1,13 @@
+{
+  "test_date": "2025-08-05T13:31:16.250328",
+  "python_version": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+  "dependencies": {
+    "tensorflow": "OK",
+    "opencv": "OK",
+    "numpy": "OK",
+    "pillow": "OK"
+  },
+  "structure_check": "OK",
+  "simulation_test": "OK",
+  "overall_status": "PASSED"
+}

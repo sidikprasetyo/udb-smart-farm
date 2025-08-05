@@ -6,7 +6,14 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ai:setup": "bash setup_ai_model.sh",
+    "ai:setup:windows": "setup_ai_model.bat",
+    "ai:train": "python ai-model/scripts/train_model.py",
+    "ai:api": "python ai-model/scripts/start_api.py",
+    "ai:camera": "python ai-model/scripts/run_camera.py --mode realtime",
+    "ai:capture": "python ai-model/scripts/run_camera.py --mode capture",
+    "ai:predict": "python predict_esp32_enhanced.py"
   },
   "dependencies": {
     "firebase": "^11.10.0",
