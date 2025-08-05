@@ -7,22 +7,39 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 
-// Mapping warna sesuai sensorId
+// Warna tiap sensor
 const colorMap: { [key: string]: string } = {
-  kelembaban_tanah: "#16a34a",    // bg-green-600
-  ph_tanah: "#9333ea",            // bg-purple-500
-  curah_hujan: "#2563eb",         // bg-blue-600
-  kecepatan_angin: "#60a5fa",     // bg-blue-400
-  suhu_tanah: "#ef4444",          // bg-red-500
-  suhu_udara: "#f97316",          // bg-orange-500
-  kelembaban_udara: "#06b6d4",    // bg-cyan-500
-  radiasi: "#facc15",             // bg-yellow-500
-  nitrogen: "#3b82f6",            // bg-blue-500
-  phosphorus: "#8b5cf6",          // bg-purple-500
-  kalium: "#f59e0b",              // bg-yellow-600
-  ec_tanah: "#22d3ee",            // bg-cyan-400
+  suhu_udara: "#f97316",
+  suhu_tanah: "#ef4444",
+  kelembaban_udara: "#06b6d4",
+  kelembaban_tanah: "#16a34a",
+  curah_hujan: "#2563eb",
+  kecepatan_angin: "#60a5fa",
+  ph_tanah: "#9333ea",
+  radiasi: "#facc15",
+  nitrogen: "#3b82f6",
+  phosphorus: "#8b5cf6",
+  kalium: "#f59e0b",
+  ec_tanah: "#22d3ee",
+};
+
+// Satuan tiap sensor
+const unitMap: { [key: string]: string } = {
+  suhu_udara: "°C",
+  suhu_tanah: "°C",
+  kelembaban_udara: "%",
+  kelembaban_tanah: "%",
+  curah_hujan: "mm",
+  kecepatan_angin: "m/s",
+  ph_tanah: "pH",
+  radiasi: "W/m²",
+  nitrogen: "mg/kg",
+  phosphorus: "mg/kg",
+  kalium: "mg/kg",
+  ec_tanah: "dS/m",
 };
 
 interface SensorGraphProps {
@@ -34,160 +51,158 @@ interface SensorGraphProps {
   sensorId: string;
 }
 
+// Type definition for tooltip payload
+interface TooltipPayload {
+  value: number;
+  dataKey: string;
+  color: string;
+  payload: {
+    waktu: string;
+    value: number;
+    parsedDate: Date;
+    index: number;
+  };
+}
+
+// Type definition for custom tooltip props
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}
+
 const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
-  // ✅ Perbaikan: Format waktu dengan parameter yang benar
+  const unit = unitMap[sensorId] || "";
+
   const formatTimeOnly = (waktuString: string) => {
     try {
-      // Parse waktu string menjadi Date object
       const date = new Date(waktuString);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        console.error("Invalid date:", waktuString);
-        return "Invalid";
-      }
-      
-      return date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch (error) {
-      console.error("Error formatting time:", error, waktuString);
+      return isNaN(date.getTime())
+        ? "Invalid"
+        : date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+    } catch {
       return "Error";
     }
   };
 
-  // ✅ Transform dan sort data berdasarkan tanggal (terbaru ke terlama)
   const transformedData = data
     .map((item, index) => {
-      // Parse dan format ulang waktu untuk memastikan konsistensi
-      let formattedTime = item.waktu;
       let parsedDate = new Date(item.waktu);
-      
-      try {
-        if (!isNaN(parsedDate.getTime())) {
-          formattedTime = parsedDate.toISOString(); // Format standar untuk chart
-        } else {
-          // Jika parsing gagal, coba beberapa format alternatif
-          parsedDate = new Date();
-        }
-      } catch (error) {
-        console.error("Error parsing date:", error, item.waktu);
-        parsedDate = new Date();
-      }
-      
+      if (isNaN(parsedDate.getTime())) parsedDate = new Date();
       return {
         ...item,
-        waktu: formattedTime,
-        parsedDate: parsedDate, // Simpan parsed date untuk sorting
-        index: index + 1
+        waktu: parsedDate.toISOString(),
+        parsedDate,
+        index: index + 1,
       };
     })
-    // ✅ Sort berdasarkan tanggal dari terbaru (descending)
     .sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime())
-    // Ambil 10 data terbaru saja
-    .slice(0, 10)
+    .slice(0, 10);
 
-  console.log("Original data:", data.slice(0, 3));
-  console.log("Transformed and sorted data:", transformedData.slice(0, 3));
-
-  // Ambil warna berdasarkan sensorId, fallback ke biru
   const strokeColor = colorMap[sensorId] || "#3b82f6";
+  const average =
+    transformedData.reduce((acc, cur) => acc + cur.value, 0) /
+    (transformedData.length || 1);
 
-  const CustomTooltip = ({
+  const formatValue = (val: number) =>
+    `${val.toFixed(1)}${unit ? ` ${unit}` : ""}`;
+
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({
     active,
     payload,
     label,
-  }: {
-    active?: boolean;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payload?: any;
-    label?: string;
   }) => {
     if (active && payload && payload.length) {
-      try {
-        const date = new Date(label || "");
-        
-        // Check if date is valid
-        if (isNaN(date.getTime())) {
-          return (
-            <div className="bg-white p-2 border rounded shadow text-sm text-gray-800">
-              <p><strong>Value</strong> : {payload[0].value}</p>
-            </div>
-          );
-        }
-        
-        const tanggal = date.toLocaleDateString("en-US", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-        const waktu = date.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
+      const date = new Date(label || "");
+      const tanggal = date.toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      const waktu = date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
 
-        return (
-          <div className="bg-white p-2 border rounded shadow text-sm text-gray-800">
-            <p><strong>Date</strong> : {tanggal}</p>
-            <p><strong>Time</strong> : {waktu}</p>
-            <p><strong>Value</strong> : {payload[0].value}</p>
-          </div>
-        );
-      } catch (error) {
-        console.error("Error in tooltip:", error);
-        return (
-          <div className="bg-white p-2 border rounded shadow text-sm text-gray-800">
-            <p><strong>Value</strong> : {payload[0].value}</p>
-          </div>
-        );
-      }
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow text-xs text-gray-800 space-y-1">
+          <p><strong>Date:</strong> {tanggal}</p>
+          <p><strong>Time:</strong> {waktu}</p>
+          <p><strong>Value:</strong> {formatValue(payload[0].value)}</p>
+        </div>
+      );
     }
-
     return null;
   };
 
-  // ✅ Jika tidak ada data atau data kosong
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold text-center text-gray-800 mb-4 capitalize">{title}</h2>
+      <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-4xl mx-auto text-center">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 capitalize">
+          {title}
+        </h2>
         <div className="w-full h-[300px] flex items-center justify-center">
-          <p className="text-gray-500">No data available</p>
+          <p className="text-gray-400 text-sm">📉 No data available</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-4xl mx-auto">
-      <h2 className="text-xl font-bold text-center text-gray-800 mb-4 capitalize">{title}</h2>
+    <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-gray-800 capitalize">
+          {title}
+        </h2>
+        {unit && (
+          <span className="text-sm text-gray-500 font-medium">
+            Unit: {unit}
+          </span>
+        )}
+      </div>
 
-      <div className="w-full h-[300px]">
+      <div className="w-full h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={transformedData}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="4 2" stroke="#e5e7eb" />
             <XAxis
-              dataKey="waktu" 
+              dataKey="waktu"
               tickFormatter={formatTimeOnly}
-              interval="preserveStartEnd"
-              fontSize={10}
+              fontSize={11}
               angle={-45}
               textAnchor="end"
               height={60}
+              stroke="#9ca3af"
             />
-            <YAxis 
-              fontSize={10}
+            <YAxis
+              fontSize={11}
+              stroke="#9ca3af"
+              tickFormatter={(val) => formatValue(val)}
             />
             <Tooltip content={<CustomTooltip />} />
+            <ReferenceLine
+              y={average}
+              stroke="#8884d8"
+              strokeDasharray="3 3"
+              label={{
+                value: `Avg: ${formatValue(average)}`,
+                position: "right",
+                fill: "#6b7280",
+                fontSize: 11,
+              }}
+            />
             <Line
               type="monotone"
               dataKey="value"
               stroke={strokeColor}
-              strokeWidth={2}
+              strokeWidth={3}
               dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
             />
           </LineChart>
         </ResponsiveContainer>

@@ -606,28 +606,66 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
       </div>
 
       {/* Data Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
         {filteredData.length === 0 ? (
-          <div className="col-span-full text-center text-gray-500 min-h-[20vh] flex items-center justify-center">No data available for the selected time range.</div>
+          <div className="col-span-full text-center text-gray-500 min-h-[20vh] flex items-center justify-center">
+            No data available for the selected time range.
+          </div>
         ) : (
           paginatedData.map((item) => {
             const progressValue = calculateProgressPercentage(item.value, item.name);
             const { date, time } = formatDate(item.waktu);
 
+            // Warna latar dan label status
+            let statusColor = "text-gray-500";
+            let badgeColor = "bg-gray-200";
+            if (item.status === "low") {
+              statusColor = "text-yellow-600";
+              badgeColor = "bg-yellow-100 text-yellow-700";
+            } else if (item.status === "normal") {
+              statusColor = "text-green-600";
+              badgeColor = "bg-green-100 text-green-700";
+            } else if (item.status === "high") {
+              statusColor = "text-red-600";
+              badgeColor = "bg-red-100 text-red-700";
+            }
+
+            // Konversi satuan otomatis (opsional)
+            const unitMap: { [key: string]: string } = {
+              suhu: "°C",
+              temperatur: "°C",
+              kelembaban: "%",
+              kelembaban_tanah: "%",
+              ph_tanah: "",
+              tekanan: "Pa",
+              tds: "ppm",
+            };
+            const unit = unitMap[item.name.toLowerCase()] || "";
+
             return (
-              <div key={item.id} className="bg-white rounded-2xl shadow p-4 flex items-center gap-4">
-                <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-gray-100 rounded-xl text-4xl">{item.icon}</div>
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl shadow-md p-4 flex items-start gap-4 hover:shadow-lg transition duration-300"
+              >
+                <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-gray-100 text-3xl">
+                  {item.icon}
+                </div>
                 <div className="flex-1 space-y-1">
-                  <p className="text-sm font-semibold text-gray-800">{item.name}</p>
-                  <div className="text-base font-bold text-black">{item.value}</div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div className={`h-2 rounded-full ${item.color} transition-all duration-300`} style={{ width: `${progressValue}%` }} />
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm font-semibold text-gray-800">{item.name}</p>
                   </div>
-                  <div className="text-sm text-gray-500 flex flex-col">
-                    <span className="text-green-600 font-medium capitalize">{item.status}</span>
-                    <span>
-                      📅 {date} | 🕒 {time}
-                    </span>
+                  <p className="text-lg font-bold text-black">
+                    {parseFloat(item.value).toFixed(1)} {unit}
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-2 rounded-full ${item.color} transition-all duration-300`}
+                      style={{ width: `${progressValue}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                    <div className={statusColor}>🛈 Status: <span className={`text-xs px-2 py-0.5 rounded-full ${badgeColor} capitalize`}>{item.status}</span></div>
+                    <div>📅 {date} | 🕒 {time}</div>
                   </div>
                 </div>
               </div>
