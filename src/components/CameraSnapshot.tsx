@@ -83,7 +83,7 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
         const lowerValue = statusMessage.toLowerCase();
         
         let statusDisplay;
-        if (lowerValue.includes('penyiraman') || lowerValue.includes('dilakukan') || 
+        if (lowerValue.includes('otomatis')  || 
             lowerValue.includes('aktif') || lowerValue === 'on' || lowerValue === '1') {
           statusDisplay = {
             text: "ACTIVE",
@@ -92,8 +92,8 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
             fullText: statusMessage,
             isLoading: false
           };
-        } else if (lowerValue.includes('off') || lowerValue.includes('tidak aktif') || 
-                   lowerValue.includes('mati') || lowerValue === '0') {
+        } else if (lowerValue.includes('tidak') || lowerValue.includes('bukan') || 
+                   lowerValue.includes('mati') || lowerValue.includes('dihentikan') || lowerValue === '0') {
           statusDisplay = {
             text: "OFF",
             color: "text-red-600",
