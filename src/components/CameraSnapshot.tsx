@@ -6,7 +6,6 @@ import { FaCamera, FaExpand, FaSync } from "react-icons/fa";
 import { ref, onValue } from "firebase/database";
 import { database } from "@/lib/firebaseConfig";
 import { GiWaterDrop } from "react-icons/gi";
-import Image from "next/image";
 
 interface CameraSnapshotProps {
   alt?: string;
@@ -188,7 +187,7 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
             </button>
             <button onClick={handleOpenCamera} className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium">
               <FaCamera className="text-sm" />
-              <span className="hidden sm:inline">Buka Kamera</span>
+              <span className="hidden sm:inline">Open Camera</span>
             </button>
           </div>
         </div>
@@ -200,12 +199,16 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center text-white">
                   <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-sm">Memuat gambar terbaru...</p>
+                  <p className="text-sm">Loading latest image...</p>
                 </div>
               </div>
             ) : imageUrl ? (
               <>
-                <Image src={`${imageUrl}?ts=${timestamp}`} alt={alt} fill className="object-cover" />
+                <img
+                  src={`${imageUrl}?ts=${timestamp}`}
+                  alt={alt}
+                  className="w-full h-full object-cover"
+                />
 
                 {/* Overlay with camera button - appears on hover (desktop only) */}
                 <div className="absolute inset-0 hidden sm:flex group-hover:bg-black/20 transition-all duration-300 items-center justify-center">
@@ -221,7 +224,7 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
                 {imageInfo.uploadTime && <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">{new Date(imageInfo.uploadTime).toLocaleString()}</div>}
               </>
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-white text-sm">Gambar tidak tersedia</div>
+              <div className="absolute inset-0 flex items-center justify-center text-white text-sm">Image not found</div>
             )}
           </div>
 

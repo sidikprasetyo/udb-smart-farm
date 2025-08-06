@@ -1,6 +1,5 @@
 import React from "react";
 import { X, Upload, Trash2 } from "lucide-react";
-import Image from "next/image";
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -28,7 +27,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ isOpen, on
       <div className="relative w-full max-w-4xl max-h-[90vh] mx-4 bg-white rounded-lg shadow-xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-semibold text-gray-900">Preview Gambar ({images.length})</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Image preview ({images.length})</h3>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X size={20} />
           </button>
@@ -37,13 +36,13 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ isOpen, on
         {/* Images Grid */}
         <div className="p-4 max-h-96 overflow-y-auto">
           {images.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">Tidak ada gambar dipilih</div>
+            <div className="text-center py-8 text-gray-500">No image selected</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {images.map((image) => (
                 <div key={image.id} className="relative group">
                   <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <Image src={image.url} alt={image.name} fill className="object-cover" />
+                    <img src={image.url} alt={image.name} className="w-full h-full object-cover" />
                   </div>
 
                   {/* Remove Button */}
@@ -62,7 +61,7 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ isOpen, on
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t bg-gray-50">
           <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-            Batal
+            Cancel
           </button>
 
           <button
@@ -73,12 +72,12 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ isOpen, on
             {isUploading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Mengupload...
+                Uploading...
               </>
             ) : (
               <>
                 <Upload size={16} />
-                Upload {images.length} Gambar
+                Upload {images.length} Image
               </>
             )}
           </button>
