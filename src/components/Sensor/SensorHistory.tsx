@@ -357,7 +357,8 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
       });
 
       const exportData = dataToExport.map((item) => {
-        const { waktu, timestamp, created_at, updatedAt, createdAt, date, time, ...sensors } = item;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, waktu, timestamp, created_at, updatedAt, createdAt, date, time, ...sensors } = item;
         const timeField = waktu || timestamp || created_at || updatedAt || createdAt || date || time;
 
         const parsedDate = parseCustomDate(timeField as string);
@@ -445,14 +446,14 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     const name = sensorName.toLowerCase();
     
     // Check for specific patterns in sensor name
-    if (name.includes('ph')) return '';
+    if (name.includes('tanah')) return '';
     if (name.includes('ec')) return ' μS/cm';
     if (name.includes('kelembaban') || name.includes('moisture') || name.includes('humidity')) return ' %RH';
     if (name.includes('suhu') || name.includes('temperature')) return ' °C';
     if (name.includes('kecepatan') || name.includes('wind') || name.includes('speed')) return ' m/s';
     if (name.includes('curah') || name.includes('rainfall') || name.includes('hujan')) return ' mm';
     if (name.includes('radiasi') || name.includes('radiation')) return ' W/m²';
-    if (name.includes('nitrogen') || name.includes('phosphorus') || name.includes('kalium') || name.includes('potassium')) return ' mg/kg';
+    if (name.includes('nitrogen') || name.includes('phosphorus') || name.includes('potassium')) return ' mg/kg';
     
     // Fallback - check exact matches (case insensitive)
     const exactMatches: { [key: string]: string } = {
