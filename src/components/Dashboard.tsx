@@ -115,19 +115,19 @@ const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConn
       <div className="mt-8 p-6 mb-8 bg-white rounded-xl shadow-md">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">System Overview</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-green-50 rounded-lg">
+          <div className="flex flex-col items-center justify-center text-center p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-green-600">{Object.values(data).filter((sensor) => typeof sensor === "object" && sensor.status === "normal").length}</div>
             <div className="text-sm text-green-600">Normal</div>
           </div>
-          <div className="text-center p-4 bg-yellow-50 rounded-lg">
+          <div className="flex flex-col items-center justify-center text-center p-4 bg-yellow-50 rounded-lg">
             <div className="text-2xl font-bold text-yellow-600">{Object.values(data).filter((sensor) => typeof sensor === "object" && (sensor.status === "low" || sensor.status === "high")).length}</div>
             <div className="text-sm text-yellow-600">Warning</div>
           </div>
-          <div className="text-center p-4 bg-blue-50 rounded-lg">
+          <div className="flex flex-col items-center justify-center text-center p-4 bg-blue-50 rounded-lg">
             <div className="text-2xl font-bold text-blue-600">12</div>
             <div className="text-sm text-blue-600">Total Sensors</div>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg relative">
+          <div className="flex flex-col items-center justify-center text-center p-4 bg-gray-50 rounded-lg relative">
             <div className="flex items-center justify-center gap-2 mb-1">
               <div className={`w-2 h-2 rounded-full ${connectionStatus.bgColor} ${isConnected ? "animate-pulse" : ""}`}></div>
               <div className="text-lg font-bold text-gray-600">{formatTimestamp(lastUpdateTimestamp ?? null)}</div>

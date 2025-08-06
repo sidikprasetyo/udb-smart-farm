@@ -168,7 +168,10 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
 
       <div className="w-full h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={transformedData}>
+          <LineChart
+            data={transformedData}
+            margin={{ top: 20, right: 50, bottom: 10, left: 0 }} // tambahkan margin atas
+          >
             <CartesianGrid strokeDasharray="4 2" stroke="#e5e7eb" />
             <XAxis
               dataKey="waktu"
@@ -183,6 +186,7 @@ const SensorGraph: React.FC<SensorGraphProps> = ({ title, data, sensorId }) => {
               fontSize={11}
               stroke="#9ca3af"
               tickFormatter={(val) => formatValue(val)}
+              domain={["auto", "dataMax + 10"]} // beri ruang 10 unit di atas nilai maksimum
             />
             <Tooltip content={<CustomTooltip />} />
             <ReferenceLine
