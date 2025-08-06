@@ -5,6 +5,8 @@ import { RotateCcw, Image as ImageIcon, Loader2 } from "lucide-react";
 import { uploadToServer, uploadFileToServer } from "../../../lib/uploadUtils";
 import { ImagePreviewModal } from "../../ImagePreviewModal";
 import { ToastContainer } from "../../Toast";
+import { useRouter } from "next/navigation";
+
 
 interface ImageData {
   id: string;
@@ -34,6 +36,8 @@ const CameraFragment = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const router = useRouter();
+
 
   // Toast functions
   const addToast = useCallback((type: "success" | "error" | "warning", message: string) => {
@@ -169,7 +173,7 @@ const CameraFragment = () => {
     setIsUploading(false);
     setIsModalOpen(false);
 
-    // Clear images and revoke URLs
+    // Cleanup
     selectedImages.forEach((image) => {
       if (image.file) {
         URL.revokeObjectURL(image.url);
@@ -177,12 +181,19 @@ const CameraFragment = () => {
     });
     setSelectedImages([]);
 
-    // Show results
+    // Show result
     if (successCount > 0) {
       addToast("success", `${successCount} gambar berhasil diupload`);
     }
     if (errorCount > 0) {
       addToast("error", `${errorCount} gambar gagal diupload`);
+    }
+
+    // Redirect to dashboard if at least one upload succeeded
+    if (successCount > 0) {
+      setTimeout(() => {
+        router.replace("/dashboard");
+      }, 1500); // beri sedikit delay agar toast bisa muncul sebentar
     }
   };
 
@@ -221,7 +232,8 @@ const CameraFragment = () => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className="relative mx-auto w-[90vw] h-[80vh] bg-black overflow-hidden text-white font-sans rounded-lg">
+
       {/* Video Stream */}
       <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
 
@@ -230,7 +242,7 @@ const CameraFragment = () => {
         <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center">
           <div className="text-center text-white">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-            <p>Menginisialisasi kamera...</p>
+            <p>Camera initialization...</p>
           </div>
         </div>
       )}
@@ -239,58 +251,56 @@ const CameraFragment = () => {
       <canvas ref={canvasRef} className="hidden" />
 
       {/* Top Controls */}
-      <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/50 to-transparent">
+      <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent z-10">
         <div className="flex items-center justify-between">
           <div className="text-white">
-            <h1 className="text-lg font-semibold">Smart Farm Camera</h1>
-            <p className="text-sm opacity-75">{devices.length > 0 && `Kamera ${currentDeviceIndex + 1} dari ${devices.length}`}</p>
           </div>
-
           {selectedImages.length > 0 && (
-            <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors">
-              <ImageIcon size={16} />
-              <span className="hidden sm:inline">{selectedImages.length} Dipilih</span>
-              <span className="sm:hidden">{selectedImages.length}</span>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-md transition-all duration-200"
+            >
+              <ImageIcon size={18} />
+              <span>{selectedImages.length}</span>
             </button>
           )}
         </div>
       </div>
 
+
       {/* Bottom Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
-        <div className="flex items-center justify-center gap-4">
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent z-10">
+        <div className="flex items-center justify-center gap-6">
           {/* Gallery Button */}
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+            className="w-14 h-14 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition transform active:scale-95 backdrop-blur-md shadow-lg"
           >
-            <ImageIcon size={20} />
+            <ImageIcon size={22} />
           </button>
 
           {/* Capture Button */}
           <button
             onClick={handleCapture}
             disabled={!isCameraReady}
-            className="w-16 h-16 sm:w-20 sm:h-20 bg-white hover:bg-gray-100 disabled:bg-gray-300 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 disabled:cursor-not-allowed shadow-lg"
+            className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl border-4 border-white hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 border-4 border-gray-400 rounded-full" />
+            <div className="w-14 h-14 bg-red-500 rounded-full transition-all duration-200" />
           </button>
 
-          {/* Rotate Camera Button */}
+          {/* Rotate Button */}
           <button
             onClick={handleRotateCamera}
             disabled={devices.length <= 1}
-            className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-14 h-14 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition transform active:scale-95 backdrop-blur-md shadow-lg disabled:opacity-40"
           >
-            <RotateCcw size={20} />
+            <RotateCcw size={22} />
           </button>
         </div>
 
-        {/* Instructions */}
-        <div className="text-center mt-4">
-          <p className="text-white/75 text-sm">Tekan tombol putih untuk mengambil foto</p>
-        </div>
+        <p className="text-center text-white/80 mt-3 text-sm">Push the capture button to take a picture</p>
       </div>
+
 
       {/* Hidden File Input */}
       <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleGallerySelect} className="hidden" />
