@@ -17,7 +17,7 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor, className = "" }) => {
     if (name.includes("soil") && name.includes("moisture")) {
       return { min: 0, max: 100 };
     } else if (name.includes("ec") && name.includes("soil")) {
-      return { min: 0, max: 12 };
+      return { min: 0, max: 4000 };
     } else if (name.includes("soil") && name.includes("ph")) {
       return { min: 0, max: 14 };
     } else if (name.includes("radiasi")) {

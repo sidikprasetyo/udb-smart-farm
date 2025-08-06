@@ -239,7 +239,7 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
             {/* Kiri: Info Gambar dan Status Pompa */}
             <div className="flex flex-col gap-2 w-full sm:w-2/3">
               <div className="flex flex-col gap-1">
-                <span>Last updated: {new Date(timestamp).toLocaleTimeString()}</span>
+                <span>Last updated image: {new Date(timestamp).toLocaleTimeString()}</span>
 
                 {/* {imageInfo.fileName && (
                     <span className="text-xs text-gray-500">

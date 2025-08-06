@@ -171,8 +171,8 @@ const Home: React.FC = () => {
     kelembaban_udara: " %RH",
     suhu_udara: " °C",
     kecepatan_angin: " m/s",
-    ec_tanah: " dS/m",
-    kelembaban_tanah: " %",
+    ec_tanah: " μS/cm",
+    kelembaban_tanah: " %RH",
     ph_tanah: "",
     radiasi: " W/m²",
     suhu_tanah: " °C",
@@ -194,6 +194,23 @@ const Home: React.FC = () => {
     nitrogen: "Nitrogen",
     phosphorus: "Phosphorus",
     kalium: "Potassium",
+  };
+
+  // Parse Firebase datetime format to timestamp
+  const parseFirebaseDateTime = (dateTimeString: string): number | null => {
+    try {
+      // Format: "05/08/2025 17:12:45"
+      const [datePart, timePart] = dateTimeString.split(" ");
+      const [day, month, year] = datePart.split("/");
+      const [hours, minutes, seconds] = timePart.split(":");
+      
+      // Create Date object (month is 0-indexed)
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds));
+      return date.getTime();
+    } catch (error) {
+      console.error("Error parsing Firebase datetime:", error);
+      return null;
+    }
   };
 
   // ✅ Fetch username berdasarkan user yang login
@@ -242,7 +259,7 @@ const Home: React.FC = () => {
         return value < 100 ? "low" : value > 200 ? "high" : "normal";
 
       case "ec_tanah": // Electrical Conductivity
-        return value < 1 ? "low" : value > 4 ? "high" : "normal";
+        return value < 1000 ? "low" : value > 2000 ? "high" : "normal";
 
       case "ph_tanah":
         return value < 5.5 ? "low" : value > 7.5 ? "high" : "normal"; // Ideal pH cabai: 5.5 - 7.5
@@ -274,10 +291,6 @@ const Home: React.FC = () => {
         const status = calculateStatus(key, value);
         const progress = Math.min(Math.max(Math.round(value), 0), 100);
 
-        // Update timestamp whenever sensor data changes
-        const currentTimestamp = Date.now();
-        setLastUpdateTimestamp(currentTimestamp);
-
         setDashboardData((prevData) => ({
           ...prevData,
           [key]: {
@@ -289,34 +302,15 @@ const Home: React.FC = () => {
             progress,
             color: defaultColors[key],
           },
-          waktu: new Date(currentTimestamp).toISOString(),
         }));
-
-        // Update Firebase timestamp when sensor data changes
-        updateFirebaseTimestamp(currentTimestamp);
       }
     });
   };
 
-  // Function to update Firebase timestamp
-  const updateFirebaseTimestamp = async (timestamp: number) => {
-    try {
-      await fetch("/api/system/timestamp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ timestamp }),
-      });
-    } catch (error) {
-      console.error("Failed to update Firebase timestamp:", error);
-    }
-  };
-
-  // ✅ Listen to Firebase system metadata for real-time last update
+  // ✅ Listen to Firebase connection status and timestamp from "waktu" field
   useEffect(() => {
-    const timestampRef = ref(database, "system/lastUpdate");
     const connectedRef = ref(database, ".info/connected");
+    const waktuRef = ref(database, "sensor/waktu");
 
     // Listen to connection status
     const unsubscribeConnection = onValue(connectedRef, (snapshot) => {
@@ -325,34 +319,37 @@ const Home: React.FC = () => {
       console.log("Firebase connection status:", connected);
     });
 
-    // Listen to system timestamp updates from Firebase
-    const unsubscribeTimestamp = onValue(timestampRef, (snapshot) => {
-      const timestamp = snapshot.val();
-      if (timestamp) {
-        setLastUpdateTimestamp(timestamp);
-        console.log("Firebase timestamp updated:", new Date(timestamp).toLocaleString());
-      } else {
-        // If no timestamp exists, initialize with current time
-        const now = Date.now();
-        setLastUpdateTimestamp(now);
-        updateFirebaseTimestamp(now);
+    // Listen to "waktu" field for timestamp updates
+    const unsubscribeWaktu = onValue(waktuRef, (snapshot) => {
+      const waktuValue = snapshot.val();
+      if (waktuValue) {
+        const timestamp = parseFirebaseDateTime(waktuValue);
+        if (timestamp) {
+          setLastUpdateTimestamp(timestamp);
+          console.log("Firebase waktu updated:",
+              new Date(timestamp).toLocaleString("en-US", {
+                hour12: true, // gunakan AM/PM
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+              })
+            );
+          
+          // Update dashboard waktu field
+          setDashboardData((prevData) => ({
+            ...prevData,
+            waktu: new Date(timestamp).toISOString(),
+          }));
+        }
       }
     });
 
-    // Reduced heartbeat interval for more responsive updates
-    const heartbeatInterval = setInterval(async () => {
-      try {
-        const now = Date.now();
-        await updateFirebaseTimestamp(now);
-      } catch (error) {
-        console.error("Heartbeat update failed:", error);
-      }
-    }, 10000); // Update every 10 seconds instead of 30
-
     return () => {
       unsubscribeConnection();
-      unsubscribeTimestamp();
-      clearInterval(heartbeatInterval);
+      unsubscribeWaktu();
     };
   }, []);
 
@@ -397,48 +394,54 @@ const Home: React.FC = () => {
                       <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"} animate-pulse`}></div>
                       <span className={isConnected ? "text-green-600" : "text-red-600"}>{isConnected ? "Live Connection" : "Disconnected"}</span>
                     </div>
-                    <div className="text-gray-400 text-xs">10s sync</div>
+                    <div className="text-gray-400 text-xs">Real-time</div>
                   </div>
 
-                  <div className="text-gray-600">Last Update: {lastUpdateTimestamp ? new Date(lastUpdateTimestamp).toLocaleTimeString("id-ID") : "No data"}</div>
+                  <div className="text-gray-600">
+                    Last Update: {lastUpdateTimestamp
+                      ? new Date(lastUpdateTimestamp).toLocaleString("en-US", {
+                          hour12: true, // gunakan AM/PM
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })
+                      : "No data"}
+                  </div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-gray-500">
                       {lastUpdateTimestamp
                         ? (() => {
                             const secondsAgo = Math.floor((Date.now() - lastUpdateTimestamp) / 1000);
-                            return secondsAgo < 5 ? "Just now" : `${secondsAgo}s ago`;
+                            const hoursAgo = Math.floor(secondsAgo / 3600);
+                            return hoursAgo < 1 ? "Less than 1 hour ago" : `${hoursAgo}h ago`;
                           })()
                         : ""}
                     </span>
                     <div
                       className={`text-xs px-2 py-1 rounded-full ${
-                        lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 15000
+                        lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 60000
                           ? "bg-green-100 text-green-800"
-                          : lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 60000
+                          : lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 300000
                           ? "bg-yellow-100 text-yellow-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 15000 ? "Live" : lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 60000 ? "Stale" : "Offline"}
+                      {lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 60000 
+                        ? "Live" 
+                        : lastUpdateTimestamp && Date.now() - lastUpdateTimestamp < 300000 
+                        ? "Stale" 
+                        : "Offline"}
                     </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={async () => {
-                    try {
-                      await fetch("/api/system/timestamp", { method: "POST" });
-                    } catch (error) {
-                      console.error("Failed to update timestamp:", error);
-                    }
-                  }}
-                  className="mt-3 w-full px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
-                >
-                  Force Update
-                </button>
-
-                <div className="mt-2 text-xs text-gray-500">Real-time sync • Updates on sensor changes</div>
+                <div className="mt-3 text-xs text-gray-500">
+                  Real-time sync • Updates on sensor changes
+                </div>
               </div>
             )}
           </div>

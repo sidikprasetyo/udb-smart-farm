@@ -69,7 +69,7 @@ const sensorFieldMapping: {
     label: "Soil Moisture",
     icon: <MdOpacity className="w-7 h-7 text-green-600" />,
     color: "bg-green-600",
-    unit: " %",
+    unit: " %RH",
   },
   ph_tanah: {
     label: "Soil PH",
@@ -93,7 +93,7 @@ const sensorFieldMapping: {
     label: "EC Soil",
     icon: <FcElectricalSensor className="w-7 h-7 text-green-400" />,
     color: "bg-cyan-400",
-    unit: " dS/m",
+    unit: " μS/cm",
   },
   nitrogen: {
     label: "Nitrogen",
@@ -198,7 +198,7 @@ const SensorDetailPage = () => {
         return value < 100 ? "low" : value > 200 ? "high" : "normal";
 
       case "ec_tanah": // Electrical Conductivity
-        return value < 1 ? "low" : value > 4 ? "high" : "normal";
+        return value < 1000 ? "low" : value > 2000 ? "high" : "normal";
 
       case "ph_tanah":
         return value < 5.5 ? "low" : value > 7.5 ? "high" : "normal"; // Ideal pH cabai: 5.5 - 7.5

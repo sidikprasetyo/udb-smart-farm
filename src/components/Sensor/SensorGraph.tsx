@@ -30,16 +30,16 @@ const colorMap: { [key: string]: string } = {
 const unitMap: { [key: string]: string } = {
   suhu_udara: "°C",
   suhu_tanah: "°C",
-  kelembaban_udara: "%",
-  kelembaban_tanah: "%",
+  kelembaban_udara: "%RH",
+  kelembaban_tanah: "%RH",
   curah_hujan: "mm",
   kecepatan_angin: "m/s",
-  ph_tanah: "pH",
+  ph_tanah: "",
   radiasi: "W/m²",
   nitrogen: "mg/kg",
   phosphorus: "mg/kg",
   kalium: "mg/kg",
-  ec_tanah: "dS/m",
+  ec_tanah: "μS/cm",
 };
 
 interface SensorGraphProps {

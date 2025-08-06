@@ -17,7 +17,7 @@ const Toast: React.FC<ToastProps> = ({ type, title, message, isVisible, onClose 
     if (isVisible) {
       const timer = setTimeout(() => {
         onClose();
-      }, 4000); // Auto close after 4 seconds
+      }, 4000);
       return () => clearTimeout(timer);
     }
   }, [isVisible, onClose]);
@@ -75,7 +75,7 @@ const Toast: React.FC<ToastProps> = ({ type, title, message, isVisible, onClose 
   );
 };
 
-// SensorPagination Component (simplified version)
+// SensorPagination Component
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -118,14 +118,13 @@ interface HistoryItem {
   icon: JSX.Element;
   waktu: string;
   color: string;
-  // Add other possible fields for type safety
   timestamp?: string;
   created_at?: string;
   updatedAt?: string;
   createdAt?: string;
   date?: string;
   time?: string;
-  [key: string]: unknown; // For dynamic sensor fields
+  [key: string]: unknown;
 }
 
 interface Props {
@@ -158,7 +157,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     message: ''
   });
 
-  // Show toast function
   const showToast = (type: 'success' | 'error' | 'warning', title: string, message: string) => {
     setToast({
       isVisible: true,
@@ -168,12 +166,10 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     });
   };
 
-  // Close toast function
   const closeToast = () => {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -207,31 +203,26 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
 
   const beautifySensorName = (key: string): string => {
     const map: Record<string, string> = {
-      // Fields waktu yang baru
       Date: "Tanggal",
       Time: "Waktu",
-      
-      // Sensor fields
       ph_tanah: "pH Tanah",
       ec_tanah: "EC Tanah",
-      kelembaban_tanah: "Kelembaban Tanah (%)",
+      kelembaban_tanah: "Kelembaban Tanah (%RH)",
       suhu_tanah: "Suhu Tanah (°C)",
       suhu_udara: "Suhu Udara (°C)",
-      kelembaban_udara: "Kelembaban Udara (%)",
+      kelembaban_udara: "Kelembaban Udara (%RH)",
       kecepatan_angin: "Kecepatan Angin (m/s)",
       curah_hujan: "Curah Hujan (mm)",
       radiasi: "Radiasi (W/m²)",
       nitrogen: "Nitrogen (mg/kg)",
       phosphorus: "Phosphorus (mg/kg)",
       kalium: "Kalium (mg/kg)",
-      
-      // English versions
       soil_ph: "pH Tanah",
       soil_ec: "EC Tanah", 
-      soil_moisture: "Kelembaban Tanah (%)",
+      soil_moisture: "Kelembaban Tanah (%RH)",
       soil_temperature: "Suhu Tanah (°C)",
       air_temperature: "Suhu Udara (°C)",
-      air_humidity: "Kelembaban Udara (%)",
+      air_humidity: "Kelembaban Udara (%RH)",
       wind_speed: "Kecepatan Angin (m/s)",
       rainfall: "Curah Hujan (mm)",
       radiation: "Radiasi (W/m²)",
@@ -241,7 +232,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     return map[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Helper function untuk parsing tanggal dengan format DD/MM/YYYY HH:mm:ss
   const parseCustomDate = (dateString: string): Date => {
     try {
       const ddmmyyyyPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(\s+\d{1,2}:\d{1,2}:\d{1,2})?$/;
@@ -301,7 +291,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
         return;
       }
 
-      // Filter berdasarkan waktu jika filterOption !== 'all'
       let dataToExport = [...allSensorData];
       if (filterOption !== "all") {
         const now = Date.now();
@@ -347,7 +336,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
         return;
       }
 
-      // Sort berdasarkan waktu dari terbaru ke terlama
       dataToExport = dataToExport.sort((a, b) => {
         const getTimeField = (item: HistoryItem) => {
           return item.waktu || item.timestamp || item.created_at || item.updatedAt || item.createdAt || item.date || item.time;
@@ -368,10 +356,8 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
         return dateB - dateA;
       });
 
-      // Format data mentah menjadi objek Excel-friendly dengan semua sensor
       const exportData = dataToExport.map((item) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id, waktu, timestamp, created_at, updatedAt, createdAt, date, time, ...sensors } = item;
+        const { waktu, timestamp, created_at, updatedAt, createdAt, date, time, ...sensors } = item;
         const timeField = waktu || timestamp || created_at || updatedAt || createdAt || date || time;
 
         const parsedDate = parseCustomDate(timeField as string);
@@ -410,14 +396,13 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     }
   };
 
-  // Konfigurasi range untuk setiap jenis sensor
   const getSensorRange = (sensorName: string) => {
     const name = sensorName.toLowerCase();
 
     if (name.includes("soil") && name.includes("moisture")) {
       return { min: 0, max: 100 }; 
     } else if (name.includes("ec") && name.includes("soil")) {
-      return { min: 0, max: 12 };
+      return { min: 0, max: 4000 };
     } else if (name.includes("soil") && name.includes("ph")) {
       return { min: 0, max: 14 };
     } else if (name.includes("radiasi")) {
@@ -443,7 +428,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     }
   };
 
-  // Function untuk mengkonversi nilai sensor ke persentase
   const calculateProgressPercentage = (value: string, sensorName: string) => {
     const numericValue = parseFloat(value);
 
@@ -454,6 +438,39 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     percentage = Math.max(0, Math.min(100, percentage));
 
     return percentage;
+  };
+
+  // Fixed function to get unit based on sensor name
+  const getSensorUnit = (sensorName: string): string => {
+    const name = sensorName.toLowerCase();
+    
+    // Check for specific patterns in sensor name
+    if (name.includes('ph')) return '';
+    if (name.includes('ec')) return ' μS/cm';
+    if (name.includes('kelembaban') || name.includes('moisture') || name.includes('humidity')) return ' %RH';
+    if (name.includes('suhu') || name.includes('temperature')) return ' °C';
+    if (name.includes('kecepatan') || name.includes('wind') || name.includes('speed')) return ' m/s';
+    if (name.includes('curah') || name.includes('rainfall') || name.includes('hujan')) return ' mm';
+    if (name.includes('radiasi') || name.includes('radiation')) return ' W/m²';
+    if (name.includes('nitrogen') || name.includes('phosphorus') || name.includes('kalium') || name.includes('potassium')) return ' mg/kg';
+    
+    // Fallback - check exact matches (case insensitive)
+    const exactMatches: { [key: string]: string } = {
+      'curah_hujan': ' mm',
+      'kelembaban_udara': ' %RH',
+      'suhu_udara': ' °C',
+      'kecepatan_angin': ' m/s',
+      'ec_tanah': ' μS/cm',
+      'kelembaban_tanah': ' %RH',
+      'ph_tanah': '',
+      'radiasi': ' W/m²',
+      'suhu_tanah': ' °C',
+      'nitrogen': ' mg/kg',
+      'phosphorus': ' mg/kg',
+      'kalium': ' mg/kg',
+    };
+    
+    return exactMatches[name] || '';
   };
 
   const getFilterLabel = (opt: string) => {
@@ -469,7 +486,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
     }
   };
 
-  // Filter dan sort data dari terbaru ke terlama
   const filteredData = useMemo(() => {
     let filtered = [...allData];
 
@@ -505,7 +521,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-  // Helper function untuk format tanggal yang aman
   const formatDate = (waktuString: string) => {
     try {
       const date = new Date(waktuString);
@@ -533,7 +548,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
 
   return (
     <div>
-      {/* Toast Notification */}
       <Toast
         type={toast.type}
         title={toast.title}
@@ -542,9 +556,7 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
         onClose={closeToast}
       />
 
-      {/* Filter + Export bar */}
       <div className="bg-white w-full md:w-[40vw] lg:w-[22vw] shadow-md rounded-xl p-4 mb-4 flex flex-row items-start md:items-center gap-4">
-        {/* Filter Dropdown */}
         <div className="relative w-full md:w-48" ref={dropdownRef}>
           <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center justify-between border border-gray-300 px-4 py-2 w-full rounded-md bg-white shadow-sm hover:bg-gray-100 text-sm text-gray-700">
             {getFilterLabel(filterOption)}
@@ -569,7 +581,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
           )}
         </div>
 
-        {/* Export Dropdown */}
         <div className="relative w-full md:w-auto" ref={exportRef}>
           <button
             onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
@@ -605,7 +616,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
         </div>
       </div>
 
-      {/* Data Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
         {filteredData.length === 0 ? (
           <div className="col-span-full text-center text-gray-500 min-h-[20vh] flex items-center justify-center">
@@ -615,8 +625,10 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
           paginatedData.map((item) => {
             const progressValue = calculateProgressPercentage(item.value, item.name);
             const { date, time } = formatDate(item.waktu);
+            
+            // Use the new getSensorUnit function
+            const unit = getSensorUnit(item.name);
 
-            // Warna latar dan label status
             let statusColor = "text-gray-500";
             let badgeColor = "bg-gray-200";
             if (item.status === "low") {
@@ -629,18 +641,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
               statusColor = "text-red-600";
               badgeColor = "bg-red-100 text-red-700";
             }
-
-            // Konversi satuan otomatis (opsional)
-            const unitMap: { [key: string]: string } = {
-              suhu: "°C",
-              temperatur: "°C",
-              kelembaban: "%",
-              kelembaban_tanah: "%",
-              ph_tanah: "",
-              tekanan: "Pa",
-              tds: "ppm",
-            };
-            const unit = unitMap[item.name.toLowerCase()] || "";
 
             return (
               <div
@@ -655,7 +655,7 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
                     <p className="text-sm font-semibold text-gray-800">{item.name}</p>
                   </div>
                   <p className="text-lg font-bold text-black">
-                    {parseFloat(item.value).toFixed(1)} {unit}
+                    {parseFloat(item.value).toFixed(1)}{unit}
                   </p>
                   <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                     <div
@@ -674,7 +674,6 @@ const SensorHistory: React.FC<Props> = ({ allData }) => {
         )}
       </div>
 
-      {/* Pagination */}
       {filteredData.length > 0 && totalPages > 1 && <SensorPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}
     </div>
   );

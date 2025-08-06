@@ -43,38 +43,48 @@ const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConn
   // Format timestamp for display
   const formatTimestamp = (timestamp: number | null) => {
     if (!timestamp) return "--:--:--";
-    return new Date(timestamp).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    return new Date(timestamp).toLocaleString("en-US", {
+                hour12: true, // gunakan AM/PM
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+              });
   };
 
   // Get connection status color and text
   const getConnectionStatus = () => {
-    if (!isConnected) {
+    if (!lastUpdateTimestamp) {
       return {
-        color: "text-red-600",
-        bgColor: "bg-red-500",
-        text: "Disconnected",
+        color: "text-red-800",
+        bgColor: "bg-red-100",
+        text: "Offline",
       };
     }
 
-    // Check if timestamp is recent (within last 30 seconds)
-    const timeDiff = lastUpdateTimestamp ? (Date.now() - lastUpdateTimestamp) / 1000 : Infinity;
-    if (timeDiff > 30) {
+    const timeDiff = Date.now() - lastUpdateTimestamp;
+
+    if (timeDiff < 60000) {
       return {
-        color: "text-orange-600",
-        bgColor: "bg-orange-500",
-        text: "Stale Data",
+        color: "text-green-800",
+        bgColor: "bg-green-100",
+        text: "Live",
+      };
+    } else if (timeDiff < 300000) {
+      return {
+        color: "text-yellow-800",
+        bgColor: "bg-yellow-100",
+        text: "Stale",
+      };
+    } else {
+      return {
+        color: "text-red-800",
+        bgColor: "bg-red-100",
+        text: "Offline",
       };
     }
-
-    return {
-      color: "text-green-600",
-      bgColor: "bg-green-500",
-      text: "Live",
-    };
   };
 
   const connectionStatus = getConnectionStatus();
@@ -101,28 +111,8 @@ const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConn
         <CameraSnapshot title="Camera Snapshot" refreshInterval={5000} alt="ESP32 Camera Snapshot" />
       </div>
 
-      {/* Sensor Groups */}
-      <div className="space-y-8">
-        {sensorGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="space-y-4">
-            {/* Group Title */}
-            <div className="flex items-center">
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">{group.title}</h2>
-              <div className="flex-1 ml-4 border-t border-gray-300"></div>
-            </div>
-
-            {/* Sensor Cards Grid - 2 rows responsive */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-6">
-              {group.sensors.map((sensor) => (
-                <SensorCard key={sensor.id} sensor={sensor} className="hover:scale-105 transition-transform duration-200" />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Additional Stats Section */}
-      <div className="mt-8 p-6 bg-white rounded-xl shadow-md">
+      <div className="mt-8 p-6 mb-8 bg-white rounded-xl shadow-md">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">System Overview</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -147,6 +137,26 @@ const Dashboard: React.FC<DashboardProps> = ({ data, lastUpdateTimestamp, isConn
             <div className={`text-xs ${connectionStatus.color} font-medium`}>{connectionStatus.text}</div>
           </div>
         </div>
+      </div>
+
+      {/* Sensor Groups */}
+      <div className="space-y-8">
+        {sensorGroups.map((group, groupIndex) => (
+          <div key={groupIndex} className="space-y-4">
+            {/* Group Title */}
+            <div className="flex items-center">
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">{group.title}</h2>
+              <div className="flex-1 ml-4 border-t border-gray-300"></div>
+            </div>
+
+            {/* Sensor Cards Grid - 2 rows responsive */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-6">
+              {group.sensors.map((sensor) => (
+                <SensorCard key={sensor.id} sensor={sensor} className="hover:scale-105 transition-transform duration-200" />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
