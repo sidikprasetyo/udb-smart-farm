@@ -8,13 +8,20 @@ import sys
 import argparse
 from pathlib import Path
 
-# Add the ai-model src directory to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'ai-model', 'src'))
+
+# Add the ai-model src directory to the path (robust to script location)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, '..', '..'))
+SRC_PATH = os.path.join(PROJECT_ROOT, 'ai-model', 'src')
+if SRC_PATH not in sys.path:
+    sys.path.insert(0, SRC_PATH)
 
 from model import ChiliDiseaseModel
 from dotenv import load_dotenv
 
-load_dotenv('ai-model/.env')
+# Load .env from ai-model/.env (robust)
+dotenv_path = os.path.join(PROJECT_ROOT, 'ai-model', '.env')
+load_dotenv(dotenv_path)
 
 def train_model(train_path, val_path, epochs=50, fine_tune=False, fine_tune_epochs=20):
     """

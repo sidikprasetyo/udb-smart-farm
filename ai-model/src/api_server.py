@@ -158,24 +158,33 @@ def camera_status():
 @app.route('/camera/stream')
 def camera_stream():
     """Camera stream endpoint (for real-time detection)"""
-    def generate():
-        camera_manager.initialize_camera()
-        
-        while True:
-            frame = camera_manager.capture_frame()
-            if frame is None:
-                break
-            
-            # Encode frame as JPEG
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame_bytes = buffer.tobytes()
-            
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-            
-            time.sleep(0.1)  # Control frame rate
-    
     from flask import Response
+    def generate():
+        try:
+            camera_manager.initialize_camera()
+        except Exception as e:
+            yield (b'--frame\r\nContent-Type: text/plain\r\n\r\nCamera initialization failed: ' + str(e).encode() + b'\r\n')
+            return
+
+        try:
+            while True:
+                frame = camera_manager.capture_frame()
+                if frame is None:
+                    yield (b'--frame\r\nContent-Type: text/plain\r\n\r\nCamera frame not available.\r\n')
+                    break
+                # Encode frame as JPEG
+                ret, buffer = cv2.imencode('.jpg', frame)
+                if not ret:
+                    yield (b'--frame\r\nContent-Type: text/plain\r\n\r\nFrame encoding failed.\r\n')
+                    break
+                frame_bytes = buffer.tobytes()
+                yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                time.sleep(0.1)  # Control frame rate
+        finally:
+            try:
+                camera_manager.release_camera()
+            except Exception:
+                pass
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/diseases', methods=['GET'])
