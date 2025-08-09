@@ -1,17 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaCamera, FaExpand, FaSync } from "react-icons/fa";
 import { ref, onValue } from "firebase/database";
-import { database } from "@/lib/firebaseConfig";
+import { collection, query as firestoreQuery, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { database, firestore } from "@/lib/firebaseConfig";
 import { GiWaterDrop } from "react-icons/gi";
+import { 
+  WiDaySunny, 
+  WiCloudy, 
+  WiRain, 
+  WiDayRainMix,
+  WiThermometer,
+  WiHumidity 
+} from "react-icons/wi";
 
 interface CameraSnapshotProps {
   alt?: string;
   refreshInterval?: number;
   title?: string;
   className?: string;
+}
+
+interface ForecastData {
+  curah_hujan: number;
+  kecepatan_angin: number;
+  kelembaban_udara: number;
+  radiasi: number;
+  suhu_udara: number;
+  prediction: string;
+  timestamp: string;
 }
 
 const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title = "ESP32 Snapshot", className = "" }: CameraSnapshotProps) => {
@@ -38,7 +58,89 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
     fullText: "Loading pump status...",
     isLoading: true,
   });
+  const [forecastData, setForecastData] = useState<ForecastData | null>(null);
+  const [forecastLoading, setForecastLoading] = useState(true);
   const router = useRouter();
+
+  // Function to get weather icon based on prediction
+  const getWeatherIcon = (prediction: string) => {
+    if (!prediction || prediction.toLowerCase() === 'unknown') {
+      return <WiCloudy className="text-2xl text-gray-400" />;
+    }
+    
+    const pred = prediction.toLowerCase();
+    if (pred.includes('cerah')) {
+      return <WiDaySunny className="text-2xl text-yellow-500" />;
+    } else if (pred.includes('mendung')) {
+      return <WiCloudy className="text-2xl text-gray-600" />;
+    } else if (pred.includes('gerimis')) {
+      return <WiDayRainMix className="text-2xl text-blue-400" />;
+    } else if (pred.includes('hujan')) {
+      return <WiRain className="text-2xl text-blue-600" />;
+    } else {
+      return <WiCloudy className="text-2xl text-gray-400" />;
+    }
+  };
+
+  // Function to get weather color class
+  const getWeatherColor = (prediction: string) => {
+    if (!prediction || prediction.toLowerCase() === 'unknown') {
+      return 'text-gray-500';
+    }
+    
+    const pred = prediction.toLowerCase();
+    if (pred.includes('cerah')) {
+      return 'text-yellow-600';
+    } else if (pred.includes('mendung')) {
+      return 'text-gray-600';
+    } else if (pred.includes('gerimis')) {
+      return 'text-blue-500';
+    } else if (pred.includes('hujan')) {
+      return 'text-blue-600';
+    } else {
+      return 'text-gray-500';
+    }
+  };
+
+  // Function to format timestamp
+  function formatTimestamp(timestamp: any): string {
+  try {
+    if (!timestamp) return 'N/A';
+
+    let date: Date;
+
+    // Firestore Timestamp
+    if (typeof timestamp.toDate === 'function') {
+      date = timestamp.toDate();
+    }
+    // Date object
+    else if (timestamp instanceof Date) {
+      date = timestamp;
+    }
+    // String
+    else if (typeof timestamp === 'string') {
+      const parsed = new Date(timestamp);
+      if (isNaN(parsed.getTime())) return 'Invalid date';
+      date = parsed;
+    }
+    // Fallback
+    else {
+      return 'Invalid date';
+    }
+
+    return date.toLocaleString('en-US', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  } catch {
+    return 'Invalid date';
+  }
+}
 
   // Ambil nama file terbaru
   const fetchLatestImage = async () => {
@@ -69,6 +171,68 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
       console.error("Failed to fetch latest image:", err);
       setError("Gagal memuat gambar terbaru");
       setIsLoading(false);
+    }
+  };
+
+  // Load forecast data from Firestore
+  const loadForecastData = () => {
+    try {
+      const forecastRef = collection(firestore, 'forecasts');
+      const q = firestoreQuery(
+        forecastRef, 
+        orderBy('timestamp', 'desc'), 
+        limit(1)
+      );
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        if (!snapshot.empty) {
+          const latestDoc = snapshot.docs[0];
+          const data = latestDoc.data();
+          
+          // Extract input_data if it exists
+          const inputData = data.input_data || {};
+          
+          // Get prediction with fallback
+          let prediction = inputData.prediction || data.prediction || 'No data';
+          if (!prediction || prediction.toLowerCase() === 'unknown' || prediction.trim() === '') {
+            prediction = 'No data';
+          }
+          
+          // Get timestamp with fallback
+          let timestampValue = inputData.timestamp || data.timestamp;
+          if (!timestampValue) {
+            timestampValue = new Date().toISOString();
+          }
+          
+          const forecastInfo: ForecastData = {
+            curah_hujan: inputData.curah_hujan || 0,
+            kecepatan_angin: inputData.kecepatan_angin || 0,
+            kelembaban_udara: inputData.kelembaban_udara || 0,
+            radiasi: inputData.radiasi || 0,
+            suhu_udara: inputData.suhu_udara || 0,
+            prediction: prediction,
+            timestamp: timestampValue
+          };
+          
+          setForecastData(forecastInfo);
+          setForecastLoading(false);
+        } else {
+          console.log('No forecast documents found');
+          setForecastData(null);
+          setForecastLoading(false);
+        }
+      }, (error) => {
+        console.error('Error loading forecast data:', error);
+        setForecastData(null);
+        setForecastLoading(false);
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error setting up forecast listener:', error);
+      setForecastData(null);
+      setForecastLoading(false);
+      return () => {};
     }
   };
 
@@ -160,13 +324,17 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
   useEffect(() => {
     fetchLatestImage(); // Saat pertama
     loadPumpStatus(); // Load pump status
+    const unsubscribeForecast = loadForecastData(); // Load forecast data
 
     const interval = setInterval(() => {
       setTimestamp(Date.now());
       fetchLatestImage(); // Update berkala
     }, refreshInterval);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      unsubscribeForecast(); // Clean up forecast listener
+    };
   }, [refreshInterval]);
 
   return (
@@ -238,53 +406,114 @@ const CameraSnapshot = ({ alt = "Camera Snapshot", refreshInterval = 5000, title
 
         {/* Footer Info */}
         <div className="p-4 bg-gray-50 border-t border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm text-gray-600">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 text-sm text-gray-600">
             {/* Kiri: Info Gambar dan Status Pompa */}
-            <div className="flex flex-col gap-2 w-full sm:w-2/3">
+            <div className="flex flex-col gap-3 w-full lg:w-2/3">
+              {/* Image Info */}
               <div className="flex flex-col gap-1">
-                <span>Last updated image: {new Date(timestamp).toLocaleTimeString()}</span>
-
-                {/* {imageInfo.fileName && (
-                    <span className="text-xs text-gray-500">
-                      File: {imageInfo.fileName}
-                      {imageInfo.fileSize && ` (${(imageInfo.fileSize / 1024).toFixed(1)} KB)`}
-                    </span>
-                  )} */}
-
-                {imageInfo.uploadTime && <span className="text-xs text-gray-500">Captured: {new Date(imageInfo.uploadTime).toLocaleString()}</span>}
+                <span>Last updated image: {new Date(timestamp).toLocaleString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: true
+                })}</span>
+                {imageInfo.uploadTime && (
+                  <span className="text-xs text-gray-500">
+                    Captured: {new Date(imageInfo.uploadTime).toLocaleString('en-US', {
+                      month: '2-digit',
+                      day: '2-digit',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true
+                    })}
+                  </span>
+                )}
               </div>
 
               {/* Status Pompa */}
-              <div className="flex flex-wrap items-start gap-0 sm:gap-2 sm:items-center sm:flex-nowrap">
-                <div className="flex items-center gap-1 sm:gap-2 min-h-[1.25rem]">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
                   <GiWaterDrop className={`w-4 h-4 shrink-0 ${pumpStatus.color}`} />
-                  <span className="text-xs font-medium text-gray-700 whitespace-nowrap leading-none">Pump Status:</span>
-                </div>
-                <div className={`inline-flex items-center px-2 py-1 rounded-full ${pumpStatus.bgColor}`}>
-                  <span className={`text-xs font-semibold ${pumpStatus.color}`}>
-                    {pumpStatus.isLoading ? (
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                        <span>Loading...</span>
-                      </div>
-                    ) : (
-                      pumpStatus.text
-                    )}
-                  </span>
+                  <span className="text-xs font-medium text-gray-700">Pump Status:</span>
+                  <div className={`inline-flex items-center px-2 py-1 rounded-full ${pumpStatus.bgColor}`}>
+                    <span className={`text-xs font-semibold ${pumpStatus.color}`}>
+                      {pumpStatus.isLoading ? (
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                          <span>Loading...</span>
+                        </div>
+                      ) : (
+                        pumpStatus.text
+                      )}
+                    </span>
+                  </div>
                 </div>
 
                 {!pumpStatus.isLoading && pumpStatus.fullText && pumpStatus.fullText !== "No data available" && (
-                  <div className="text-xs text-gray-500 max-w-full break-words sm:max-w-xs sm:mt-0 mt-1" title={pumpStatus.fullText}>
-                    {pumpStatus.fullText.length > 80 ? pumpStatus.fullText.substring(0, 80) + "..." : pumpStatus.fullText}
+                  <div className="text-xs text-gray-500 max-w-full break-words pl-6" title={pumpStatus.fullText}>
+                    {pumpStatus.fullText.length > 100 ? pumpStatus.fullText.substring(0, 100) + "..." : pumpStatus.fullText}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Kanan: Auto Refresh dan Status */}
-            <div className="flex flex-col gap-1 text-left sm:text-right w-full sm:w-auto">
-              <span className="text-xs">Auto refresh: {refreshInterval / 1000}s</span>
-              {error ? <span className="text-xs text-red-500">{error}</span> : imageUrl && <span className="text-xs text-green-500">● Live</span>}
+            {/* Kanan: Auto Refresh, Status, dan Forecast */}
+            <div className="flex flex-col gap-3 text-left lg:text-right w-full lg:w-1/3">
+              {/* Auto Refresh dan Status */}
+              <div className="flex flex-col gap-1">
+                <span className="text-xs">Auto refresh: {refreshInterval / 1000}s</span>
+                {error ? (
+                  <span className="text-xs text-red-500">{error}</span>
+                ) : imageUrl && (
+                  <span className="text-xs text-green-500">● Live</span>
+                )}
+              </div>
+              
+              {/* Weather Forecast */}
+              <div className="border-t border-gray-300 pt-3">
+                <div className="text-xs font-medium text-gray-700 mb-2">Weather Forecast</div>
+                {forecastLoading ? (
+                  <div className="flex items-center gap-1 text-xs text-gray-500 justify-start lg:justify-end">
+                    <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading forecast...</span>
+                  </div>
+                ) : forecastData ? (
+                  <div className="space-y-2">
+                    {/* Weather condition */}
+                    <div className="flex items-center gap-2 justify-start lg:justify-end">
+                      {getWeatherIcon(forecastData.prediction)}
+                      <span className={`text-xs font-medium capitalize ${getWeatherColor(forecastData.prediction)}`}>
+                        {forecastData.prediction === 'No data' ? 'No data' : forecastData.prediction}
+                      </span>
+                    </div>
+                    
+                    {/* Temperature and Humidity */}
+                    <div className="flex items-center gap-4 text-xs justify-start lg:justify-end">
+                      <div className="flex items-center gap-1">
+                        <WiThermometer className="text-orange-500 text-lg" />
+                        <span className="text-gray-700">
+                          {forecastData.suhu_udara ? forecastData.suhu_udara.toFixed(1) : '0.0'}°C
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <WiHumidity className="text-blue-500 text-lg" />
+                        <span className="text-gray-700">
+                          {forecastData.kelembaban_udara ? forecastData.kelembaban_udara.toFixed(1) : '0.0'}%
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Forecast timestamp */}
+                    <div className="text-xs text-gray-400">
+                      Updated: {formatTimestamp(forecastData.timestamp)}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500 text-left lg:text-right">No forecast data</div>
+                )}
+              </div>
             </div>
           </div>
         </div>
